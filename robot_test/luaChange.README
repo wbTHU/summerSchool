@@ -1,0 +1,19 @@
+
+对机械手臂：
+
+在JacoHand的function sysCall_actuation()方法内的
+    close_hand=sim.getScriptSimulationParameter(sim.handle_self,'close_hand')
+行之前，加入：
+
+    handsignal = sim.getStringSignal('goto_close')
+    if handsignal ~= nil then
+        if tonumber(handsignal) == 0 then
+            sim.setScriptSimulationParameter(sim.handle_self,'close_hand','false')
+        elseif tonumber(handsignal) == 1 then
+            sim.setScriptSimulationParameter(sim.handle_self,'close_hand','true')
+        end
+    end
+
+在JacoHand的function sysCall_cleanup()方法内最后一行加入
+
+    sim.clearStringSignal('goto_close')
