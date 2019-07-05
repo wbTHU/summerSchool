@@ -106,52 +106,55 @@ while abs(pos[2] - z) > 0.1:
 
 # vrep.simxGetPingTime(clientID)
     
-# vision = []
-# for i in range(zedNum):
-#     _, sensor, v = vrep.simxGetVisionSensorImage(clientID,zedHandle[i],0,vrep.simx_opmode_blocking)
-#     print(len(v))
-#     f = open(zedName + str(i) +'.txt', 'w')
-#     f.write(str(v))
-#     f.close()
-#     vision.append(v)
+vision = []
+for i in range(zedNum):
+    _, sensor, v = vrep.simxGetVisionSensorImage(clientID,zedHandle[i],0,vrep.simx_opmode_blocking)
+    # print(len(v))
+    # f = open(zedName + str(i) +'.txt', 'w')
+    # f.write(str(v))
+    # f.close()
+    vision.append(v)
 # vrep.simxPauseCommunication(clientID, True)
-_, sensor, v = vrep.simxGetVisionSensorImage(clientID,zedHandle[0],0,vrep.simx_opmode_blocking)
+# _, sensor, v = vrep.simxGetVisionSensorImage(clientID,zedHandle[0],0,vrep.simx_opmode_blocking)
 
-print(len(v))
+# print(len(v))
 # print(max(v))
 # f = open(zedName + str(0) +'.txt', 'w')
 # f.write(str(v))
 # f.close()
-t = []
-for i in v:
-    t.append(int2uint8(i))
+# t = []
+# for i in v:
+#     t.append(int2uint8(i))
 # print(max(t))
 targetX = 0
 targetY = 0
 
+tx = []
+ty = []
 
-maxx=0
-minx=100000
-maxy=0
-miny=100000
-xlen = 1280
-ylen = 720
+for v in vision:
+    maxx=0
+    minx=100000
+    maxy=0
+    miny=100000
+    xlen = 1280
+    ylen = 720
 
+    for i in range(xlen): 
+        for j in range(ylen):
+            if v[i*ylen*3 + j*3]> 0 and v[i*ylen*3+j*3+1]> 0 and v[i*ylen*3+2]>0:
+                maxx=max(maxx,i)
+                minx=min(minx,i)
+                maxy=max(maxy,j)
+                miny=min(miny,j)
+    tx.append((maxx+minx)/2)
+    ty.append((maxy+miny)/2)
+              
+targetX = (tx[0] + tx[1]) / 2
+targetY = (ty[0] + ty[1]) / 2
 
-
-for i in range(xlen): 
-    for j in range(ylen):
-        if v[i*ylen*3 + j*3]> 0 and v[i*ylen*3+j*3+1]> 0 and v[i*ylen*3+2]>0:
-            maxx=max(maxx,i)
-            minx=min(minx,i)
-            maxy=max(maxy,j)
-            miny=min(miny,j)
-targetX = (maxx+minx)/2
-targetY = (maxy+miny)/2
 print(targetX)
 print(targetY)
-              
-
 
 
 
@@ -191,7 +194,7 @@ if vrep.simxGetConnectionId(clientID) != -1:
     
     # vrep.simxPauseCommunication(clientID, True)
 
-
+    time.sleep(0.1)
     print('start to go back')
 
 
