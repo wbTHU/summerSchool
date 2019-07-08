@@ -56,7 +56,8 @@ if clientID != -1:
             vrep.simxGetPingTime(clientID)
             # vrep.simxSynchronousTrigger(clientID)
             _, transferInfo = vrep.simxGetStringSignal(clientID, "transferInfo", vrep.simx_opmode_blocking)
-            _str = transferInfo.decode('utf-8').replace("\"", "").split(" ")
+            # _, transferInfo2 = vrep.simxGetStringSignal(clientID, "transferInfo2", vrep.simx_opmode_blocking)
+            # _str = transferInfo.decode('utf-8').replace("\"", "").split(" ")
 
         while abs(-2 - pos[1]) > 0.1:
             pos[1] += 0.01
@@ -64,7 +65,8 @@ if clientID != -1:
             vrep.simxSynchronousTrigger(clientID)
             vrep.simxGetPingTime(clientID)
             _, transferInfo = vrep.simxGetStringSignal(clientID, "transferInfo", vrep.simx_opmode_blocking)
-            _str = transferInfo.decode('utf-8').replace("\"", "").split(" ")
+            # _, transferInfo2 = vrep.simxGetStringSignal(clientID, "transferInfo2", vrep.simx_opmode_blocking)
+            # _str = transferInfo.decode('utf-8').replace("\"", "").split(" ")
 
         while abs(2 - pos[2]) > 0.1:
             pos[2] += 0.01
@@ -72,7 +74,8 @@ if clientID != -1:
             vrep.simxSynchronousTrigger(clientID)
             vrep.simxGetPingTime(clientID)
             _, transferInfo = vrep.simxGetStringSignal(clientID, "transferInfo", vrep.simx_opmode_blocking)
-            _str = transferInfo.decode('utf-8').replace("\"", "").split(" ")
+            # _, transferInfo2 = vrep.simxGetStringSignal(clientID, "transferInfo2", vrep.simx_opmode_blocking)
+            # _str = transferInfo.decode('utf-8').replace("\"", "").split(" ")
         print("OOOOK")
         break
 
@@ -84,10 +87,16 @@ if clientID != -1:
     error, transferInfo = vrep.simxGetStringSignal(clientID, "transferInfo", vrep.simx_opmode_blocking)
     _str = transferInfo.decode('utf-8').replace("\"", "").split(" ")
 
+    # vrep.simxSynchronousTrigger(clientID)
+    # error, transferInfo = vrep.simxGetStringSignal(clientID, "transferInfo2", vrep.simx_opmode_blocking)
+    # _str2 = transferInfo.decode('utf-8').replace("\"", "").split(" ")
+
     _, vspos = vrep.simxGetObjectPosition(clientID, zed0, -1, vrep.simx_opmode_blocking)
     length = vspos[2] * math.tan(85 * math.pi / 360) / 640
+    # des_x = vspos[0] - (640 - int((_str[0] + _str2[0])*0.5)) * length
+    # des_y = vspos[1] - (360 - int(int(_str[1]+_str2[1])/6)) * length
     des_x = vspos[0] - (640 - int(_str[0])) * length
-    des_y = vspos[1] - (360 - int(int(_str[1])/3)) * length
+    des_y = vspos[1] - (360 - int(int(_str[1]) / 3)) * length
     flagx = math.copysign(1, des_x)
     flagy = math.copysign(1, des_y)
     print(vspos[2])
