@@ -93,6 +93,7 @@ for i in range(row):
         for k in range(3):
             m = vv[i * col * 3 + j * 3 + k]
             s.append(m)
+        s[0], s[1] = s[1], s[0]  # opencv使用的是BGR，因此需要交换G和B
         t.append(s)
     re.append(t)
 print(len(re))
@@ -102,17 +103,20 @@ print(len(re))
 # f.close()
 
 mat = np.array(re,dtype=np.uint8)
+# mat1 = mat
 mat1 = cv2.flip(mat,0,dst=None) #垂直镜像
 
 # cv2.imshow('hhh',mat1)
 # cv2.waitKey()
 
 gray = cv2.cvtColor(mat1,cv2.COLOR_BGR2GRAY) #进行灰度转化
-
-limit = 220
-mask = cv2.inRange(gray,0,limit) #将0~220范围内的像素点全部转化为白色，其余为黑色，达到凸显二维码的目的
-# cv2.imshow('hhh',mask)
+# cv2.imshow('hhh',gray)
 # cv2.waitKey()
+
+limit = 240 # 二维码选 240   T、E选 215
+mask = cv2.inRange(gray,0,limit) #将0-limit范围内的像素点全部转化为黑色，其余为白色，（存疑）达到凸显二维码的目的
+cv2.imshow('mask',mask)
+cv2.waitKey()
 
 # 利用黑色像素的位置得到二维码的中心坐标
 maxx=0
