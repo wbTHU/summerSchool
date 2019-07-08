@@ -3,6 +3,7 @@ import numpy as np
 import math
 import time
 import ctypes
+import cv2
 
 
 tstep = 0.005
@@ -12,6 +13,9 @@ landName = 'land_plane'
 zedName = 'zed_vision'
 zedNum = 2
 xAngle = 85
+row = 720
+col = 1280
+limit = 220
 
 
 def int2uint8(num):
@@ -106,33 +110,46 @@ while abs(pos[2] - z) > 0.1:
 
 # vrep.simxGetPingTime(clientID)
     
+# 利用image.py中的方法找二维码（可视区域）中心点
 vision = []
+trans = []
 for i in range(zedNum):
     _, sensor, v = vrep.simxGetVisionSensorImage(clientID,zedHandle[i],0,vrep.simx_opmode_blocking)
-    # print(len(v))
-    # f = open(zedName + str(i) +'.txt', 'w')
-    # f.write(str(v))
-    # f.close()
     vision.append(v)
-# vrep.simxPauseCommunication(clientID, True)
-# _, sensor, v = vrep.simxGetVisionSensorImage(clientID,zedHandle[0],0,vrep.simx_opmode_blocking)
 
-# print(len(v))
-# print(max(v))
-# f = open(zedName + str(0) +'.txt', 'w')
-# f.write(str(v))
-# f.close()
-# t = []
-# for i in v:
-#     t.append(int2uint8(i))
-# print(max(t))
+for v in vision:
+    ts = []
+    for i in v:
+        t = int2uint8(i)
+        ts.append(t)
+    trans.append(ts)
+
+masks = []
+
+for v in vision:
+    re = []
+    for i in range(row):
+        t = []
+        for j in range(col):
+            s = []
+            for k in range(3):
+                m = v[i * col * 3 + j * 3 + k]
+                s.append(m)
+            t.append(s)
+        re.append(t)
+    mat = np.array(re,dtype=np.uint8)
+    mat1 = cv2.flip(mat,0,dst=None) #垂直镜像
+    gray = cv2.cvtColor(mat1,cv2.COLOR_BGR2GRAY)
+    mask = cv2.inRange(gray,0,limit)
+    masks.append(mask)
+
 targetX = 0
 targetY = 0
 
 tx = []
 ty = []
 
-for v in vision:
+for mask in masks:
     maxx=0
     minx=100000
     maxy=0
@@ -142,7 +159,7 @@ for v in vision:
 
     for i in range(xlen): 
         for j in range(ylen):
-            if v[i*ylen*3 + j*3]> 0 and v[i*ylen*3+j*3+1]> 0 and v[i*ylen*3+2]>0:
+            if mask[j][i] > 0:
                 maxx=max(maxx,i)
                 minx=min(minx,i)
                 maxy=max(maxy,j)
@@ -157,18 +174,6 @@ print(targetX)
 print(targetY)
 
 
-
-# _, buffer = vrep.simxGetStringSignal(clientID,'targetPos',vrep.simx_opmode_blocking)
-
-# vrep.simxSynchronousTrigger(clientID)
-# vrep.simxGetPingTime(clientID)
-# err, buffer = vrep.simxGetStringSignal(clientID,'targetPos',vrep.simx_opmode_blocking)
-# ss = buffer.decode('utf-8')
-# s = ss.split(' ')
-
-# targetX = round(float(s[0]))
-# print(targetX)
-# targetY = round(float(s[1]))
 
 print('zed0Pos' + str(zedPos))
 z = zedPos[2]

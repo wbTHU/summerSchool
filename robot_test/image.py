@@ -104,8 +104,33 @@ print(len(re))
 mat = np.array(re,dtype=np.uint8)
 mat1 = cv2.flip(mat,0,dst=None) #垂直镜像
 
-cv2.imshow('hhh',mat1)
-cv2.waitKey()
+# cv2.imshow('hhh',mat1)
+# cv2.waitKey()
+
+gray = cv2.cvtColor(mat1,cv2.COLOR_BGR2GRAY) #进行灰度转化
+
+limit = 220
+mask = cv2.inRange(gray,0,limit) #将0~220范围内的像素点全部转化为白色，其余为黑色，达到凸显二维码的目的
+# cv2.imshow('hhh',mask)
+# cv2.waitKey()
+
+# 利用黑色像素的位置得到二维码的中心坐标
+maxx=0
+minx=100000
+maxy=0
+miny=100000
+xlen = 1280
+ylen = 720
+
+for i in range(xlen): 
+    for j in range(ylen):
+        if mask[j][i] > 0:
+            maxx=max(maxx,i)
+            minx=min(minx,i)
+            maxy=max(maxy,j)
+            miny=min(miny,j)
+targetX = (maxx + minx) / 2
+targetY = (maxy + miny) / 2
 
 
 
