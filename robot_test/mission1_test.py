@@ -15,7 +15,7 @@ zedNum = 2
 xAngle = 85
 row = 720
 col = 1280
-limit = 220
+limit = 50
 
 
 def int2uint8(num):
@@ -140,7 +140,7 @@ for v in vision:
     mat = np.array(re,dtype=np.uint8)
     mat1 = cv2.flip(mat,0,dst=None) #垂直镜像
     gray = cv2.cvtColor(mat1,cv2.COLOR_BGR2GRAY)
-    mask = cv2.inRange(gray,0,limit)
+    mask = cv2.inRange(gray,limit,255) #将limit-255范围内的像素点全部转化为白色（255），0-limit为黑色（0）,达到凸显二维码的目的
     masks.append(mask)
 
 targetX = 0
@@ -150,6 +150,26 @@ tx = []
 ty = []
 
 for mask in masks:
+
+    # 先找到白色大块边界（去除边界黑块影响）
+    # 利用黑色像素的位置得到二维码的中心坐标
+
+    MAXX=0
+    MINX=100000
+    MAXY=0
+    MINY=100000
+    xlen = 1280
+    ylen = 720
+
+    for i in range(xlen): 
+        for j in range(ylen):
+            if mask[j][i] > 0: # 找白色
+                MAXX=max(MAXX,i)
+                MINX=min(MINX,i)
+                MAXY=max(MAXY,j)
+                MINY=min(MINY,j)
+                # 得到白色边界
+
     maxx=0
     minx=100000
     maxy=0
@@ -159,7 +179,7 @@ for mask in masks:
 
     for i in range(xlen): 
         for j in range(ylen):
-            if mask[j][i] > 0:
+            if mask[j][i] == 0 and i >= MINX and i <= MAXX and j >= MINY and j <= MAXY: # 找黑色
                 maxx=max(maxx,i)
                 minx=min(minx,i)
                 maxy=max(maxy,j)

@@ -113,12 +113,34 @@ gray = cv2.cvtColor(mat1,cv2.COLOR_BGR2GRAY) #进行灰度转化
 # cv2.imshow('hhh',gray)
 # cv2.waitKey()
 
-limit = 240 # 二维码选 240   T、E选 215
-mask = cv2.inRange(gray,0,limit) #将0-limit范围内的像素点全部转化为黑色，其余为白色，（存疑）达到凸显二维码的目的
-cv2.imshow('mask',mask)
-cv2.waitKey()
+limit = 50 
+mask = cv2.inRange(gray,limit,255) #将limit-255范围内的像素点全部转化为白色（255），0-limit为黑色（0），（存疑）达到凸显二维码的目的
 
+
+# 先找到白色大块边界（去除边界黑块影响）
 # 利用黑色像素的位置得到二维码的中心坐标
+
+MAXX=0
+MINX=100000
+MAXY=0
+MINY=100000
+xlen = 1280
+ylen = 720
+
+for i in range(xlen): 
+    for j in range(ylen):
+        if mask[j][i] > 0: # 找白色
+            MAXX=max(MAXX,i)
+            MINX=min(MINX,i)
+            MAXY=max(MAXY,j)
+            MINY=min(MINY,j)
+            # 得到白色边界
+print(MINX)
+print(MAXX)
+print(MINY)
+print(MAXY)
+
+
 maxx=0
 minx=100000
 maxy=0
@@ -128,14 +150,22 @@ ylen = 720
 
 for i in range(xlen): 
     for j in range(ylen):
-        if mask[j][i] > 0:
+        if mask[j][i] == 0 and i >= MINX and i <= MAXX and j >= MINY and j <= MAXY: # 找黑色
             maxx=max(maxx,i)
             minx=min(minx,i)
             maxy=max(maxy,j)
             miny=min(miny,j)
+
+
 targetX = (maxx + minx) / 2
 targetY = (maxy + miny) / 2
+print(targetX)
+print(targetY)
 
+# mask[int(targetY)][int(targetX)] = 128
+
+cv2.imshow('mask',mask)
+cv2.waitKey()
 
 
 
