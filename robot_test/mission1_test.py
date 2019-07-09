@@ -57,54 +57,56 @@ _, targetHandle = vrep.simxGetObjectHandle(clientID,targetName,vrep.simx_opmode_
 
 print('Handles available!')
 
+vrep.simxSynchronousTrigger(clientID)
+
 _, originalP = vrep.simxGetObjectPosition(clientID,targetHandle,-1,vrep.simx_opmode_blocking)
 _, landP = vrep.simxGetObjectPosition(clientID,landHandle,-1,vrep.simx_opmode_blocking)
 pos = originalP
 
-_, zedPos = vrep.simxGetObjectPosition(clientID,zedHandle[0],-1,vrep.simx_opmode_blocking)
+
 
 
 
 vrep.simxSynchronousTrigger(clientID)
 
-print('go out')
+# print('go out')
 
-x = 1
-y = -1
-z = 3
+# x = 1
+# y = -1
+# z = 3
 
-if pos[0] > x:
-    Xsign = -1
-else: 
-    Xsign = 1
+# if pos[0] > x:
+#     Xsign = -1
+# else: 
+#     Xsign = 1
 
-if pos[1] > y:
-    Ysign = -1
-else: 
-    Ysign = 1
+# if pos[1] > y:
+#     Ysign = -1
+# else: 
+#     Ysign = 1
 
-if pos[2] > z:
-    Zsign = -1
-else: 
-    Zsign = 1
+# if pos[2] > z:
+#     Zsign = -1
+# else: 
+#     Zsign = 1
 
-while abs(pos[0] - x) > 0.1:
-    pos[0] = pos[0] + Xsign * 0.005
-    vrep.simxSetObjectPosition(clientID,targetHandle,-1,pos,vrep.simx_opmode_blocking)
-    vrep.simxSynchronousTrigger(clientID)
-    vrep.simxGetPingTime(clientID)
+# while abs(pos[0] - x) > 0.1:
+#     pos[0] = pos[0] + Xsign * 0.005
+#     vrep.simxSetObjectPosition(clientID,targetHandle,-1,pos,vrep.simx_opmode_blocking)
+#     vrep.simxSynchronousTrigger(clientID)
+#     vrep.simxGetPingTime(clientID)
 
-while abs(pos[1] - y) > 0.1:
-    pos[1] = pos[1] + Ysign * 0.005
-    vrep.simxSetObjectPosition(clientID,targetHandle,-1,pos,vrep.simx_opmode_blocking)
-    vrep.simxSynchronousTrigger(clientID)
-    vrep.simxGetPingTime(clientID)
+# while abs(pos[1] - y) > 0.1:
+#     pos[1] = pos[1] + Ysign * 0.005
+#     vrep.simxSetObjectPosition(clientID,targetHandle,-1,pos,vrep.simx_opmode_blocking)
+#     vrep.simxSynchronousTrigger(clientID)
+#     vrep.simxGetPingTime(clientID)
 
-while abs(pos[2] - z) > 0.1:
-    pos[2] = pos[2] + Zsign * 0.005
-    vrep.simxSetObjectPosition(clientID,targetHandle,-1,pos,vrep.simx_opmode_blocking)
-    vrep.simxSynchronousTrigger(clientID)
-    vrep.simxGetPingTime(clientID)
+# while abs(pos[2] - z) > 0.1:
+#     pos[2] = pos[2] + Zsign * 0.005
+#     vrep.simxSetObjectPosition(clientID,targetHandle,-1,pos,vrep.simx_opmode_blocking)
+#     vrep.simxSynchronousTrigger(clientID)
+#     vrep.simxGetPingTime(clientID)
 
 
 
@@ -126,7 +128,7 @@ for v in vision:
 
 masks = []
 
-for v in vision:
+for v in trans:
     re = []
     for i in range(row):
         t = []
@@ -139,6 +141,8 @@ for v in vision:
         re.append(t)
     mat = np.array(re,dtype=np.uint8)
     mat1 = cv2.flip(mat,0,dst=None) #垂直镜像
+    cv2.imshow('hhh',mat1)
+    cv2.waitKey()
     gray = cv2.cvtColor(mat1,cv2.COLOR_BGR2GRAY)
     mask = cv2.inRange(gray,limit,255) #将limit-255范围内的像素点全部转化为白色（255），0-limit为黑色（0）,达到凸显二维码的目的
     masks.append(mask)
@@ -194,13 +198,13 @@ print(targetX)
 print(targetY)
 
 
-
-print('zed0Pos' + str(zedPos))
-z = zedPos[2]
+_,nowPos = vrep.simxGetObjectPosition(clientID,baseHandle,-1,vrep.simx_opmode_blocking)
+print('nowPos' + str(nowPos))
+z = nowPos[2]
 print('z is' + str(z))
 d = math.tan(xAngle * math.pi / 360) * z / 640
-_x = zedPos[0] + (targetX - 640) * d
-_y = zedPos[1] + (targetY - 360) * d
+_x = nowPos[0] + (targetX - 640) * d
+_y = nowPos[1] + (targetY - 360) * d
 
 print('d is' + str(d))
 print('_x is'+ str(_x))
