@@ -173,34 +173,96 @@ mat1 = cv2.flip(mat,0,dst=None) #垂直镜像
 
 # -- 圆柱体物体识别 --
 
-im_hsv = cv2.cvtColor(mat1,cv2.COLOR_BGR2HSV)
+# im_hsv = cv2.cvtColor(mat1,cv2.COLOR_BGR2HSV) # 转换为HSV
 
-# lower_limit = np.array([0,0,200])
-# upper_limit = np.array([10,10,255])
-# mask = cv2.inRange(im_hsv,lower_limit,upper_limit)
-
-
-lower_red = np.array([0,100,100])
-upper_red = np.array([10,255,255])
-red_mask = cv2.inRange(im_hsv,lower_red,upper_red) # 红色区域取255（白色），其余取0（黑色）
-
-binary = cv2.Canny(red_mask, 0, 60, apertureSize = 3)
-contours, cnt = cv2.findContours(binary,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-
-if len(contours) > 0:
-    M = cv2.moments(contours[0])
-    center_x = int(M["m10"] / M["m00"])
-    center_y = int(M["m01"] / M["m00"])
-    print(center_x)
-    print(center_y) # 找到的像素点坐标（也可选择不取整）
-    # red_mask[center_y][center_x] = 0
-    # cv2.imshow('mask',red_mask)
-    # cv2.waitKey()
+# # lower_limit = np.array([0,0,200])
+# # upper_limit = np.array([10,10,255])
+# # mask = cv2.inRange(im_hsv,lower_limit,upper_limit)
 
 
-# cv2.imshow('mask',binary)
+# lower_red = np.array([0,100,100])
+# upper_red = np.array([10,255,255])
+# red_mask = cv2.inRange(im_hsv,lower_red,upper_red) # 红色区域取255（白色），其余取0（黑色）
+
+# binary = cv2.Canny(red_mask, 0, 60, apertureSize = 3)
+# contours, cnt = cv2.findContours(binary,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE) # 提取矩形轮廓
+
+# if len(contours) > 0:
+#     M = cv2.moments(contours[0])
+#     center_x = int(M["m10"] / M["m00"])
+#     center_y = int(M["m01"] / M["m00"])
+#     print(center_x)
+#     print(center_y) # 找到的像素点坐标（也可选择不取整）
+#     # red_mask[center_y][center_x] = 0
+#     # cv2.imshow('mask',red_mask)
+#     # cv2.waitKey()
+
+
+# # cv2.imshow('mask',binary)
+# # cv2.waitKey()
+
+# -- 圆柱体物体识别 --
+
+# -- T、E台子位置识别 --（类似二维码位置检查）
+
+gray = cv2.cvtColor(mat1,cv2.COLOR_BGR2GRAY) #进行灰度转化
+# cv2.imshow('hhh',gray)
 # cv2.waitKey()
 
+limit = 50 
+mask = cv2.inRange(gray,limit,255) #将limit-255范围内的像素点全部转化为白色（255），0-limit为黑色（0），（存疑）达到凸显台子图案的目的
+
+
+# 先找到白色大块边界（去除边界黑块影响）
+# 利用黑色像素的位置得到中心坐标
+
+MAXX=0
+MINX=100000
+MAXY=0
+MINY=100000
+xlen = 1280
+ylen = 720
+
+for i in range(xlen): 
+    for j in range(ylen):
+        if mask[j][i] > 0: # 找白色
+            MAXX=max(MAXX,i)
+            MINX=min(MINX,i)
+            MAXY=max(MAXY,j)
+            MINY=min(MINY,j)
+            # 得到白色边界
+print(MINX)
+print(MAXX)
+print(MINY)
+print(MAXY)
+
+
+maxx=0
+minx=100000
+maxy=0
+miny=100000
+xlen = 1280
+ylen = 720
+
+for i in range(xlen): 
+    for j in range(ylen):
+        if mask[j][i] == 0 and i >= MINX and i <= MAXX and j >= MINY and j <= MAXY: # 找黑色
+            maxx=max(maxx,i)
+            minx=min(minx,i)
+            maxy=max(maxy,j)
+            miny=min(miny,j)
+
+
+targetX = (maxx + minx) / 2
+targetY = (maxy + miny) / 2
+print(targetX)
+print(targetY)
+# mask[int(targetY)][int(targetX)] = 0
+
+# cv2.imshow('mask',mask)
+# cv2.waitKey()
+
+# -- T、E台子位置识别 --
 
 
 
