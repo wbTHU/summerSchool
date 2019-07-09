@@ -17,3 +17,19 @@
 在JacoHand的function sysCall_cleanup()方法内最后一行加入
 
     sim.clearStringSignal('goto_close')
+
+
+对target和end粗略位置获取函数：
+
+在scene中add一个Dummy，命名为my_funcs，增加associated customization script，
+在脚本内，增加函数如下：
+
+    function my_get_target_platform_pos()
+        t_pos = sim.callScriptFunction('get_target_platform_pos@util_funcs',sim.scripttype_customizationscript)
+        return {},t_pos,{},''
+    end
+
+    function my_get_end_point_pos()
+        e_pos = sim.callScriptFunction('get_end_point_pos@util_funcs',sim.scripttype_customizationscript)
+        return {},e_pos,{},''
+    end

@@ -43,105 +43,112 @@ vrep.simxStartSimulation(clientID,vrep.simx_opmode_oneshot)
 _, baseHandle = vrep.simxGetObjectHandle(clientID, baseName, vrep.simx_opmode_blocking)
 _, moveHandle = vrep.simxGetObjectHandle(clientID, moveName, vrep.simx_opmode_blocking)
 _, targetHandle = vrep.simxGetObjectHandle(clientID,targetName,vrep.simx_opmode_blocking)
+err, scriptHandle = vrep.simxGetObjectHandle(clientID,'util_funcs',vrep.simx_opmode_blocking)
 
 print('Handles available!')
    
-_, targetPos = vrep.simxGetObjectPosition(clientID,targetHandle,-1,vrep.simx_opmode_blocking)
+# _, targetPos = vrep.simxGetObjectPosition(clientID,targetHandle,-1,vrep.simx_opmode_blocking)
+vrep.simxSynchronousTrigger(clientID)
+_, _, targetPos, _, _ = vrep.simxCallScriptFunction(clientID,'my_funcs',vrep.sim_scripttype_customizationscript,'my_get_target_platform_pos',[],[],[],'',vrep.simx_opmode_blocking)
+_, _, endPos, _, _ = vrep.simxCallScriptFunction(clientID,'my_funcs',vrep.sim_scripttype_customizationscript,'my_get_end_point_pos',[],[],[],'',vrep.simx_opmode_blocking)
+
 _, originalPos = vrep.simxGetObjectPosition(clientID,moveHandle,-1,vrep.simx_opmode_blocking)
 
-
-pos = originalPos
-
-
-x = targetPos[0]
-y = targetPos[1]
-z = 5
+print(str(targetPos))
 
 
-if pos[0] > x:
-    Xsign = -1
-else: 
-    Xsign = 1
+# pos = originalPos
 
-if pos[1] > y:
-    Ysign = -1
-else: 
-    Ysign = 1
 
-if pos[2] > z:
-    Zsign = -1
-else: 
-    Zsign = 1
+# x = targetPos[0]
+# y = targetPos[1]
+# z = 5
 
-print('start!')
-while abs(pos[2] - z) > 0.05:
-    pos[2] = pos[2] + Zsign * 0.01
-    vrep.simxSetObjectPosition(clientID,moveHandle,-1,pos,vrep.simx_opmode_blocking)
-    vrep.simxSynchronousTrigger(clientID)
-    vrep.simxGetPingTime(clientID)
-start = time.time()
-while time.time() - start < 0.1:
-    vrep.simxSetObjectPosition(clientID,moveHandle,-1,pos,vrep.simx_opmode_blocking)
-    vrep.simxSynchronousTrigger(clientID)
-    vrep.simxGetPingTime(clientID)
 
-while abs(pos[0] - x) > 0.05:
-    pos[0] = pos[0] + Xsign * 0.01
-    vrep.simxSetObjectPosition(clientID,moveHandle,-1,pos,vrep.simx_opmode_blocking)
-    vrep.simxSynchronousTrigger(clientID)
-    vrep.simxGetPingTime(clientID)
+# if pos[0] > x:
+#     Xsign = -1
+# else: 
+#     Xsign = 1
 
-start = time.time()
-while time.time() - start < 0.1:
-    vrep.simxSetObjectPosition(clientID,moveHandle,-1,pos,vrep.simx_opmode_blocking)
-    vrep.simxSynchronousTrigger(clientID)
-    vrep.simxGetPingTime(clientID)
+# if pos[1] > y:
+#     Ysign = -1
+# else: 
+#     Ysign = 1
 
-while abs(pos[1] - y) > 0.05:
-    pos[1] = pos[1] + Ysign * 0.01
-    vrep.simxSetObjectPosition(clientID,moveHandle,-1,pos,vrep.simx_opmode_blocking)
-    vrep.simxSynchronousTrigger(clientID)
-    vrep.simxGetPingTime(clientID)
-start = time.time()
-while time.time() - start < 0.1:
-    vrep.simxSetObjectPosition(clientID,moveHandle,-1,pos,vrep.simx_opmode_blocking)
-    vrep.simxSynchronousTrigger(clientID)
-    vrep.simxGetPingTime(clientID)
+# if pos[2] > z:
+#     Zsign = -1
+# else: 
+#     Zsign = 1
 
-print('end!')
+# print('start!')
+# while abs(pos[2] - z) > 0.05:
+#     pos[2] = pos[2] + Zsign * 0.01
+#     vrep.simxSetObjectPosition(clientID,moveHandle,-1,pos,vrep.simx_opmode_blocking)
+#     vrep.simxSynchronousTrigger(clientID)
+#     vrep.simxGetPingTime(clientID)
+# start = time.time()
+# while time.time() - start < 0.1:
+#     vrep.simxSetObjectPosition(clientID,moveHandle,-1,pos,vrep.simx_opmode_blocking)
+#     vrep.simxSynchronousTrigger(clientID)
+#     vrep.simxGetPingTime(clientID)
 
-z = targetPos[2] + 0.1
+# while abs(pos[0] - x) > 0.05:
+#     pos[0] = pos[0] + Xsign * 0.01
+#     vrep.simxSetObjectPosition(clientID,moveHandle,-1,pos,vrep.simx_opmode_blocking)
+#     vrep.simxSynchronousTrigger(clientID)
+#     vrep.simxGetPingTime(clientID)
 
-if pos[2] > z:
-    Zsign = -1
-else: 
-    Zsign = 1
-print('land!')
+# start = time.time()
+# while time.time() - start < 0.1:
+#     vrep.simxSetObjectPosition(clientID,moveHandle,-1,pos,vrep.simx_opmode_blocking)
+#     vrep.simxSynchronousTrigger(clientID)
+#     vrep.simxGetPingTime(clientID)
 
-start = time.time()
-while time.time() - start < 0.1:
-    vrep.simxSetObjectPosition(clientID,moveHandle,-1,pos,vrep.simx_opmode_blocking)
-    vrep.simxSynchronousTrigger(clientID)
-    vrep.simxGetPingTime(clientID)
+# while abs(pos[1] - y) > 0.05:
+#     pos[1] = pos[1] + Ysign * 0.01
+#     vrep.simxSetObjectPosition(clientID,moveHandle,-1,pos,vrep.simx_opmode_blocking)
+#     vrep.simxSynchronousTrigger(clientID)
+#     vrep.simxGetPingTime(clientID)
+# start = time.time()
+# while time.time() - start < 0.1:
+#     vrep.simxSetObjectPosition(clientID,moveHandle,-1,pos,vrep.simx_opmode_blocking)
+#     vrep.simxSynchronousTrigger(clientID)
+#     vrep.simxGetPingTime(clientID)
 
-while abs(pos[2] - z) > 0.05:
-    pos[2] = pos[2] + Zsign * 0.005
-    vrep.simxSetObjectPosition(clientID,moveHandle,-1,pos,vrep.simx_opmode_blocking)
-    vrep.simxSynchronousTrigger(clientID)
-    vrep.simxGetPingTime(clientID)
+# print('end!')
 
-start = time.time()
-while time.time() - start < 0.1:
-    vrep.simxSetObjectPosition(clientID,moveHandle,-1,pos,vrep.simx_opmode_blocking)
-    vrep.simxSynchronousTrigger(clientID)
-    vrep.simxGetPingTime(clientID)
+# z = targetPos[2] + 0.1
 
-print('scramb!')
-start = time.time()
-while time.time() - start < 0.1:
-    vrep.simxSetObjectPosition(clientID,moveHandle,-1,pos,vrep.simx_opmode_blocking)
-    vrep.simxSynchronousTrigger(clientID)
-    vrep.simxGetPingTime(clientID)
-vrep.simxSetStringSignal(clientID,'goto_close','1',vrep.simx_opmode_oneshot) 
+# if pos[2] > z:
+#     Zsign = -1
+# else: 
+#     Zsign = 1
+# print('land!')
+
+# start = time.time()
+# while time.time() - start < 0.1:
+#     vrep.simxSetObjectPosition(clientID,moveHandle,-1,pos,vrep.simx_opmode_blocking)
+#     vrep.simxSynchronousTrigger(clientID)
+#     vrep.simxGetPingTime(clientID)
+
+# while abs(pos[2] - z) > 0.05:
+#     pos[2] = pos[2] + Zsign * 0.005
+#     vrep.simxSetObjectPosition(clientID,moveHandle,-1,pos,vrep.simx_opmode_blocking)
+#     vrep.simxSynchronousTrigger(clientID)
+#     vrep.simxGetPingTime(clientID)
+
+# start = time.time()
+# while time.time() - start < 0.1:
+#     vrep.simxSetObjectPosition(clientID,moveHandle,-1,pos,vrep.simx_opmode_blocking)
+#     vrep.simxSynchronousTrigger(clientID)
+#     vrep.simxGetPingTime(clientID)
+
+# print('scramb!')
+# start = time.time()
+# while time.time() - start < 0.1:
+#     vrep.simxSetObjectPosition(clientID,moveHandle,-1,pos,vrep.simx_opmode_blocking)
+#     vrep.simxSynchronousTrigger(clientID)
+#     vrep.simxGetPingTime(clientID)
+# vrep.simxSetStringSignal(clientID,'goto_close','1',vrep.simx_opmode_oneshot) 
 
 
