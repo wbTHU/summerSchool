@@ -24,7 +24,7 @@ import time
 
 print ('Program started')
 vrep.simxFinish(-1) # just in case, close all opened connections
-clientID=vrep.simxStart('127.0.0.1',19997,True,True,5000,5) # Connect to V-REP
+clientID=vrep.simxStart('127.0.0.1',19999,True,True,5000,5) # Connect to V-REP
 if clientID!=-1:
     print ('Connected to remote API server')
 
@@ -38,17 +38,6 @@ if clientID!=-1:
     time.sleep(2)
 
     # Now retrieve streaming data (i.e. in a non-blocking fashion):
-    vrep.simxSynchronous(clientID, True)
-    vrep.simxStartSimulation(clientID, vrep.simx_opmode_oneshot)
-    _, base = vrep.simxGetObjectHandle(clientID, "Quadricopter_base", vrep.simx_opmode_oneshot_wait)
-    _, target = vrep.simxGetObjectHandle(clientID, "Quadricopter_target", vrep.simx_opmode_oneshot_wait)
-    pos = [0, 0, 0]
-    pos_err = [0, 0, 0]
-    ori = [0, 0, 0]
-    ori_err = [0, 0, 0]
-
-    
-
     startTime=time.time()
     vrep.simxGetIntegerParameter(clientID,vrep.sim_intparam_mouse_x,vrep.simx_opmode_streaming) # Initialize streaming
     while time.time()-startTime < 5:
