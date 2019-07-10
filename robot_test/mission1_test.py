@@ -220,7 +220,6 @@ if vrep.simxGetConnectionId(clientID) != -1:
     
     # vrep.simxPauseCommunication(clientID, True)
 
-    time.sleep(0.1)
     print('start to go back')
 
 
@@ -255,19 +254,17 @@ if vrep.simxGetConnectionId(clientID) != -1:
     k = vrep.simxReadProximitySensor(clientID,sensorHandle,vrep.simx_opmode_blocking)
     isDetected = k[1]
     
-    while( isDetected == False):
-        pos[2] = pos[0] -  0.005
+    while( isDetected != True):
+        pos[2] = pos[2] -  0.005
         vrep.simxSetObjectPosition(clientID,targetHandle,-1,pos,vrep.simx_opmode_blocking)
         vrep.simxSynchronousTrigger(clientID)
         vrep.simxGetPingTime(clientID)
         k = vrep.simxReadProximitySensor(clientID,sensorHandle,vrep.simx_opmode_blocking)
         isDetected = k[1]
+        print(isDetected)
     
     print('land success!')
 
-    while(True):
-        vrep.simxSynchronousTrigger(clientID)
-        vrep.simxGetPingTime(clientID)
 
 
 
