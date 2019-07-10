@@ -24,11 +24,11 @@ def int2uint8(num):
         return num
 
 
-def ax2pos(zedpos,xangle,x,y):
+def ax2pos(zedpos,xangle,x,y):# 注意mission01飞机朝向 x,y指的是在图片的坐标系内像素点的坐标
     z = zedpos[2]
     d = math.tan(xangle * math.pi / 360) * z / 640
-    _x = zedpos[0] - (x - 640) * d
-    _y = zedpos[1] - (y - 360) * d
+    _x = zedpos[0] - (y - 360) * d
+    _y = zedpos[1] - (x - 640) * d
     res = []
     res.append(_x)
     res.append(_y)
@@ -62,7 +62,8 @@ for i in range(zedNum):
 _, baseHandle = vrep.simxGetObjectHandle(clientID, baseName, vrep.simx_opmode_blocking)
 _, moveHandle = vrep.simxGetObjectHandle(clientID, moveName, vrep.simx_opmode_blocking)
 _, targetHandle = vrep.simxGetObjectHandle(clientID,targetName,vrep.simx_opmode_blocking)
-err, scriptHandle = vrep.simxGetObjectHandle(clientID,'util_funcs',vrep.simx_opmode_blocking)
+_, scriptHandle = vrep.simxGetObjectHandle(clientID,'util_funcs',vrep.simx_opmode_blocking)
+
 
 print('Handles available!')
 
@@ -119,7 +120,7 @@ else:
 # print('end!')
 
 
-# 利用image.py中的方法找T（可视区域）中心点（可以写成函数方便调用）
+# 利用image.py中的方法找target圆柱体中心点（可以写成函数方便调用）
 vision = []
 trans = []
 for i in range(zedNum):
@@ -141,7 +142,6 @@ zedPos = []
 
 for i in range(zedNum):
     _, zP = vrep.simxGetObjectPosition(clientID, zedHandle[i],-1,vrep.simx_opmode_blocking)
-    print(zP)
     zedPos.append(zP)
 
 for q in range(zedNum):
@@ -207,7 +207,7 @@ print('_x is ' + str(_x))
 print('_y is ' + str(_y))
 
 
-print('restart!')
+print('start!')
 
 if pos[0] > _x:
     Xsign = -1
@@ -239,6 +239,7 @@ print('end!')
 
 
 z = targetPos[2] + 0.1
+print('z is ' + str(z))
 
 if pos[2] > z:
     Zsign = -1
