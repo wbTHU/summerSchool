@@ -2,51 +2,68 @@ from os.path import join
 from os import walk
 import numpy as np
 import cv2
-def match(query,path):
-    
-    #folder = 'D:/wurenji/summerSchool-fan_v_rep_branch/robot_test/people_img'
-    folder = path
-    descriptors = []
-    # 获取特征数据文件名
-    for (dirpath, dirnames, filenames) in walk(folder):
-        for f in filenames:
-            if f.endswith("npy"):
-                descriptors.append(f)
-        #print(descriptors)
+def match(target,picture):
+    # 获取训练好的人脸的参数数据，这里直接从GitHub上使用默认值
+    face_cascade = cv2.CascadeClassifier(r'D:/wurenji/summerSchool-fan_v_rep_branch/robot_test/haarcascade_frontalface_default.xml')
 
-    # 使用SIFT算法检查图像的关键点和描述符
-    sift = cv2.xfeatures2d.SIFT_create()
-    query_kp, query_ds = sift.detectAndCompute(query, None)
+    # 读取图片
+    image = cv2.imread(picture)
+    #cv2.imshow("Find Faces!",image)
+    #image2=cv2.resize(image, (120,120), interpolation=cv2.INTER_AREA)
+    gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
 
-    # 创建FLANN匹配器
-    index_params = dict(algorithm=0, trees=5)
-    search_params = dict(checks=50)
-    flann = cv2.FlannBasedMatcher(index_params, search_params)
+    # 探测图片中的人脸
+    faces = face_cascade.detectMultiScale(
+        gray,
+        scaleFactor = 1.15,
+        minNeighbors = 5,
+        minSize = (5,5),
+        flags = cv2.CASCADE_SCALE_IMAGE
+    )
 
-    potential_culprits = {}
-    for d in descriptors:
+    #print ("发现{0}个人脸!".format(len(faces)))
+    xx=0
+    yy=0
+    ww=0
+    hh=0
+    max_matches=0
+    i=0
+    for(x,y,w,h) in faces:
+
+
+        subimage=image[y:y+w,x:x+w]
+
+        #cv2.imwrite("D:/wurenji/summerSchool-fan_v_rep_branch/people_img/"+str(i)+".png",subimage)
+        #cv2.waitKey(5000)
+        # 使用SIFT算法检查图像的关键点和描述符
+        sift = cv2.xfeatures2d.SIFT_create()
+        query_kp, query_ds = sift.detectAndCompute(subimage, None)
+
+        # 创建FLANN匹配器
+        index_params = dict(algorithm=0, trees=5)
+        search_params = dict(checks=50)
+        flann = cv2.FlannBasedMatcher(index_params, search_params)
+
+        potential_culprits = {}
+        
         # 将图像query与特征数据文件的数据进行匹配
-        matches = flann.knnMatch(query_ds, np.load(join(folder, d)), k=2)
+        matches = flann.knnMatch(query_ds, np.load(target), k=2)
         # 清除错误匹配
         good = []
         for m, n in matches:
             if m.distance < 0.7 * n.distance:
                 good.append(m)
         # 输出每张图片与目标图片的匹配数目
-        #print("img is %s ! matching rate is (%d)" % (d, len(good)))
-        potential_culprits[d] = len(good)
+        #print( len(good))
+        if len(good)>max_matches:
+            xx=x
+            yy=y
+            ww=w
+            hh=h
+            max_matches=len(good)
+    return [int((xx+ww)/2),int((yy+ww)/2)]
 
-    # 获取最多匹配数目的图片
-    max_matches = None
-    potential_suspect = None
-    for culprit, matches in potential_culprits.items():
-        
-        if max_matches == None or matches > max_matches:
-            max_matches = matches
-            potential_suspect = culprit
 
-    #print("potential suspect is %s" % potential_suspect.replace("npy", ""))
-    return potential_suspect.replace("npy", "")
 def match_alpha(img):
 
 
