@@ -80,31 +80,28 @@ for v in vision:
         ts.append(t)
     trans.append(ts)
 
-# vv = trans[0]
+vv = trans[0]
 
 
-# row = 720
-# col = 1280
-# re = []
-# for i in range(row):
-#     t = []
-#     for j in range(col):
-#         s = []
-#         for k in range(3):
-#             m = vv[i * col * 3 + j * 3 + k]
-#             s.append(m)
-#         s[0], s[2] = s[2], s[0]  # opencv使用的是BGR，因此需要交换G和B
-#         t.append(s)
-#     re.append(t)
+row = 720
+col = 1280
+re = []
+for i in range(row):
+    t = []
+    for j in range(col):
+        s = []
+        for k in range(3):
+            m = vv[i * col * 3 + j * 3 + k]
+            s.append(m)
+        s[0], s[2] = s[2], s[0]  # opencv使用的是BGR，因此需要交换G和B
+        t.append(s)
+    re.append(t)
 
 
-# # f = open('00.txt', 'w')
-# # f.write(str(re))
-# # f.close()
-
-# mat = np.array(re,dtype=np.uint8)
-# # mat1 = mat
-# mat1 = cv2.flip(mat,0,dst=None) #垂直镜像
+mat = np.array(re,dtype=np.uint8)
+# mat1 = mat
+mat2 = cv2.flip(mat,0,dst=None) #垂直镜像
+mat1 = cv2.blur(mat2,(5,5)) # 模糊化降噪处理
 
 # cv2.imshow('hhh',mat1)
 # cv2.waitKey()
@@ -197,138 +194,141 @@ for v in vision:
 
 # -- 圆柱体物体识别 --
 
-# -- T、E台子位置识别 --（类似二维码位置检查）
+# -- T、E台子位置识别 --（类似二维码位置检查）(增加模糊化预处理后准确度明显上升  二维码也可采用)
 
-# gray = cv2.cvtColor(mat1,cv2.COLOR_BGR2GRAY) #进行灰度转化
-# # cv2.imshow('hhh',gray)
-# # cv2.waitKey()
+gray = cv2.cvtColor(mat1,cv2.COLOR_BGR2GRAY) #进行灰度转化
+# cv2.imshow('hhh',gray)
+# cv2.waitKey()
 
-# limit = 50 
-# mask = cv2.inRange(gray,limit,255) #将limit-255范围内的像素点全部转化为白色（255），0-limit为黑色（0），（存疑）达到凸显台子图案的目的
-
-
-# # 先找到白色大块边界（去除边界黑块影响）
-# # 利用黑色像素的位置得到中心坐标
-
-# MAXX=0
-# MINX=100000
-# MAXY=0
-# MINY=100000
-# xlen = 1280
-# ylen = 720
-
-# for i in range(xlen): 
-#     for j in range(ylen):
-#         if mask[j][i] > 0: # 找白色
-#             MAXX=max(MAXX,i)
-#             MINX=min(MINX,i)
-#             MAXY=max(MAXY,j)
-#             MINY=min(MINY,j)
-#             # 得到白色边界
-# print(MINX)
-# print(MAXX)
-# print(MINY)
-# print(MAXY)
+limit = 50 
+mask = cv2.inRange(gray,limit,255) #将limit-255范围内的像素点全部转化为白色（255），0-limit为黑色（0），（存疑）达到凸显台子图案的目的
 
 
-# maxx=0
-# minx=100000
-# maxy=0
-# miny=100000
-# xlen = 1280
-# ylen = 720
+# 先找到白色大块边界（去除边界黑块影响）
+# 利用黑色像素的位置得到中心坐标
 
-# for i in range(xlen): 
-#     for j in range(ylen):
-#         if mask[j][i] == 0 and i >= MINX and i <= MAXX and j >= MINY and j <= MAXY: # 找黑色
-#             maxx=max(maxx,i)
-#             minx=min(minx,i)
-#             maxy=max(maxy,j)
-#             miny=min(miny,j)
+MAXX=0
+MINX=100000
+MAXY=0
+MINY=100000
+xlen = 1280
+ylen = 720
+
+for i in range(xlen): 
+    for j in range(ylen):
+        if mask[j][i] > 0: # 找白色
+            MAXX=max(MAXX,i)
+            MINX=min(MINX,i)
+            MAXY=max(MAXY,j)
+            MINY=min(MINY,j)
+            # 得到白色边界
+print(MINX)
+print(MAXX)
+print(MINY)
+print(MAXY)
 
 
-# targetX = (maxx + minx) / 2
-# targetY = (maxy + miny) / 2
-# print(targetX)
-# print(targetY)
-# # mask[int(targetY)][int(targetX)] = 0
+maxx=0
+minx=100000
+maxy=0
+miny=100000
+xlen = 1280
+ylen = 720
 
-# # cv2.imshow('mask',mask)
-# # cv2.waitKey()
+for i in range(xlen): 
+    for j in range(ylen):
+        if mask[j][i] == 0 and i >= MINX and i <= MAXX and j >= MINY and j <= MAXY: # 找黑色
+            maxx=max(maxx,i)
+            minx=min(minx,i)
+            maxy=max(maxy,j)
+            miny=min(miny,j)
+
+kk = mat2[miny:maxy, minx:maxx]
+
+cv2.imshow('hhhhhh',kk)
+cv2.waitKey()
+
+
+targetX = (maxx + minx) / 2
+targetY = (maxy + miny) / 2
+print(targetX)
+print(targetY)
+
 
 # -- T、E台子位置识别 --
 
 
 # -- 寻找二维码新方法  -- 
 
-limit = 50
-tx = []
-ty = []
-masks = []
+# limit = 50
+# tx = []
+# ty = []
+# masks = []
 
-row = 720
-col = 1280
+# row = 720
+# col = 1280
 
 
-tx = []
-ty = []
+# tx = []
+# ty = []
 
-for q in range(zedNum):
-    v = trans[q]
-    re = []
-    for i in range(row):
-        t = []
-        for j in range(col):
-            s = []
-            for k in range(3):
-                m = v[i * col * 3 + j * 3 + k]
-                s.append(m)
-            s[0], s[2] = s[2], s[0]  # opencv使用的是BGR，因此需要交换G和B
-            t.append(s)
-        re.append(t)
+# for q in range(zedNum):
+#     v = trans[q]
+#     re = []
+#     for i in range(row):
+#         t = []
+#         for j in range(col):
+#             s = []
+#             for k in range(3):
+#                 m = v[i * col * 3 + j * 3 + k]
+#                 s.append(m)
+#             s[0], s[2] = s[2], s[0]  # opencv使用的是BGR，因此需要交换G和B
+#             t.append(s)
+#         re.append(t)
     
-    mat = np.array(re,dtype=np.uint8)
-    mat1 = cv2.flip(mat,0,dst=None) #垂直镜像
-    gray = cv2.cvtColor(mat1,cv2.COLOR_BGR2GRAY)
-    mask = cv2.inRange(gray,limit,255) #将limit-255范围内的像素点全部转化为白色（255），0-limit为黑色（0）,达到凸显二维码的目的
-    masks.append(mask)
+#     mat = np.array(re,dtype=np.uint8)
+#     mat1 = cv2.flip(mat,0,dst=None) #垂直镜像
+#     gray = cv2.cvtColor(mat1,cv2.COLOR_BGR2GRAY)
+#     mask = cv2.inRange(gray,limit,255) #将limit-255范围内的像素点全部转化为白色（255），0-limit为黑色（0）,达到凸显二维码的目的
+#     masks.append(mask)
 
-    kernel = np.ones((5,5),np.uint8)
-    erosion = cv2.erode(mask,kernel)
-    erosion = cv2.erode(erosion,kernel)
+#     kernel = np.ones((5,5),np.uint8)
+#     erosion = cv2.erode(mask,kernel)
+#     erosion = cv2.erode(erosion,kernel)
 
-    contours,hier=cv2.findContours(erosion, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-    rec = []
-    for c in contours:
-        x,y,w,h=cv2.boundingRect(c)#计算出一个简单地边界框
-        if (abs(w-h)<10) & (w>10): # 判断得到的矩形的大小是否符合（二维码的某个块即可）
-            rec.append([x,y,w,h])
+#     contours,hier=cv2.findContours(erosion, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+#     rec = []
+#     for c in contours:
+#         x,y,w,h=cv2.boundingRect(c)#计算出一个简单地边界框
+#         if (abs(w-h)<10) & (w>10): # 判断得到的矩形的大小是否符合（二维码的某个块即可）
+#             rec.append([x,y,w,h])
 
-    mi = -1
-    mw = 0
-    l = len(rec)
-    print(l)
-    for i in range(l):
-        x,y,w,h = rec[i]
-        if (mw < w):
-            mw = w
-            mi = i
-    if mi > -1:
-        x,y,w,h = rec[mi]
-        # mmm = mat1[y:y+h, x:x+w]
-        # cv2.imshow('mmm',mmm)
-        # cv2.waitKey()
-        targetX = x + w / 2
-        targetY = y + h / 2
-        tx.append(targetX)
-        ty.append(targetY)
-        print(targetX)
-        print(targetY)
-    else:
-        print(str(q) + ' is error!')
+#     mi = -1
+#     mw = 0
+#     l = len(rec)
+#     print(l)
+#     for i in range(l):
+#         x,y,w,h = rec[i]
+#         if (mw < w):
+#             mw = w
+#             mi = i
+#     if mi > -1:
+#         x,y,w,h = rec[mi]
+#         # mmm = mat1[y:y+h, x:x+w]
+#         # cv2.imshow('mmm',mmm)
+#         # cv2.waitKey()
+#         targetX = x + w / 2
+#         targetY = y + h / 2
+#         tx.append(targetX)
+#         ty.append(targetY)
+#         print(targetX)
+#         print(targetY)
+#     else:
+#         print(str(q) + ' is error!')
 
 
 # -- 寻找二维码新方法  -- 
+
 
 
 
