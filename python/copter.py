@@ -6,7 +6,7 @@ except:
     print('')
 
 rad = 180 / math.pi
-
+step = 0.018
 
 class Copter():
     def __init__(self, clientID = None):
@@ -24,7 +24,7 @@ class Copter():
         _, self.target = vrep.simxGetObjectHandle(self.clientID, "Quadricopter_target", vrep.simx_opmode_oneshot_wait)
         print("get Handle")
 
-
+    # 打开起落架
     def bracketOpen(self):
         _, lOri = vrep.simxGetObjectOrientation(self.clientID, self.left, -1, vrep.simx_opmode_blocking)
         _, lPos = vrep.simxGetObjectPosition(self.clientID, self.left, -1, vrep.simx_opmode_blocking)
@@ -45,6 +45,7 @@ class Copter():
         vrep.simxSynchronousTrigger(self.clientID)
         vrep.simxGetPingTime(self.clientID)
 
+    # 合上起落架，准备降落
     def bracketClose(self):
         _, lOri = vrep.simxGetObjectOrientation(self.clientID, self.left, -1, vrep.simx_opmode_blocking)
         _, lPos = vrep.simxGetObjectPosition(self.clientID, self.left, -1, vrep.simx_opmode_blocking)
@@ -65,8 +66,8 @@ class Copter():
         vrep.simxSynchronousTrigger(self.clientID)
         vrep.simxGetPingTime(self.clientID)
 
+    # 向指定点飞行
     def fly(self, des):
-        step = 0.01
         if vrep.simxGetConnectionId(self.clientID) != -1:
             _, pos = vrep.simxGetObjectPosition(self.clientID, self.target, -1, vrep.simx_opmode_blocking)
             vrep.simxSynchronousTrigger(self.clientID)
@@ -84,9 +85,13 @@ class Copter():
                 vrep.simxSetObjectPosition(self.clientID, self.target, -1, pos, vrep.simx_opmode_blocking)
                 vrep.simxSynchronousTrigger(self.clientID)
                 vrep.simxGetPingTime(self.clientID)
-
+            vrep.simxSetObjectPosition(self.clientID, self.target, -1, des, vrep.simx_opmode_blocking)
+            vrep.simxSynchronousTrigger(self.clientID)
+            vrep.simxGetPingTime(self.clientID)
 
 copter = Copter()
 copter.bracketOpen()
 copter.fly([1, 1, 2])
+copter.fly([2, 3, 1])
+copter.fly([0, 0, 1])
 copter.bracketClose()
