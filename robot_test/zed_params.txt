@@ -1,0 +1,26 @@
+[Resolution]
+left: 2208, 1242
+right: 2208, 1242
+
+[Left sensor]
+fx: 700.3
+fy: 700.3
+cx: 627.355
+cy: 353.359
+k1: -0.16909
+k2: 0.022672
+
+[Right sensor]
+fx: 699.698
+fy: 699.698
+cx: 627.75
+cy: 358.17
+k1: -0.16915
+k2: 0.02282
+
+[Stereo]
+baseline: 120
+convergence: 0.0129711
+rx: -0.020803
+rz: -0.000459269 
+
