@@ -22,6 +22,12 @@ class VisionSensor():
     
     def getDepthMap(self):
         _, sensor, self.depthMap = vrep.simxGetVisionSensorDepthBuffer(self.clientID,self.zedHandle,vrep.simx_opmode_blocking)
+        # self.sensor = sensor
+
+    def getDepth(self, x, y):
+        self.getDepthMap()
+        return self.depthMap[x + y * 1280]
+        
 
     def getPos(self):
         _, self.pos = vrep.simxGetObjectPosition(self.clientID,self.zedHandle,-1,vrep.simx_opmode_blocking)
@@ -34,7 +40,7 @@ class VisionSensor():
             for i in v:
                 t = int2uint8(i)
                 ts.append(t)
-                
+
             t = np.array(ts)
             re = t.reshape(720,1280,3) # 变为三维矩阵
             re[:,:,[0,2]] = re[:,:,[2,0]] # opencv使用的是BGR，因此需要交换G和B
@@ -108,6 +114,9 @@ class VisionSensor():
             
             self.targetX = x + w / 2
             self.targetY = y + h / 2
+            return 1
+        else:
+            return 0
 
     def findQR(self): # 找二维码新方法
         limit = 50
@@ -135,22 +144,52 @@ class VisionSensor():
                 mi = i
         if mi > -1:
             x,y,w,h = rec[mi]
-            mmm = self.image[y:y+h, x:x+w]
-            cv2.imshow('mmm',mmm)
-            cv2.waitKey()
+            # mmm = self.image[y:y+h, x:x+w]
+            # cv2.imshow('mmm',mmm)
+            # cv2.waitKey()
             self.targetX = x + w / 2
             self.targetY = y + h / 2
+            return 1
         else:
             print('error!')
+            return 0
 
-    # def findCircle(self):
-    #     limit = 50
-    #     gray = cv2.cvtColor(self.image,cv2.COLOR_BGR2GRAY)
-    #     mask = cv2.inRange(gray,limit,255) #将limit-255范围内的像素点全部转化为白色（255），0-limit为黑色（0）,达到凸显二维码的目的
+    def findCircle(self):
+        limit = 50
+        gray = cv2.cvtColor(self.image,cv2.COLOR_BGR2GRAY)
+        mask = cv2.inRange(gray,limit,255) #将limit-255范围内的像素点全部转化为白色（255），0-limit为黑色（0）,达到凸显二维码的目的
 
-    #     kernel = np.ones((5,5),np.uint8)
-    #     erosion = cv2.erode(mask,kernel)
-    #     erosion = cv2.erode(erosion,kernel)
+        # cv2.imshow('mask',mask)
+        # cv2.waitKey()
+
+        # kernel = np.ones((5,5),np.uint8)
+        # erosion = cv2.erode(mask,kernel)
+        # erosion = cv2.erode(erosion,kernel)
+        circles = cv2.HoughCircles(mask,cv2.HOUGH_GRADIENT,1,100,param1=100,param2=30,minRadius=5,maxRadius=300)
+        
+        l = len(circles)
+        m = -1
+        rm = -1
+        if l > 0:
+            for i in range(l):
+                x, y, r = circles[i][0]
+                if rm < r:
+                    rm = r
+                    m = i
+        
+        if m > -1:
+            x, y, r = circles[m][0]
+            # mmm = self.image[int(y-r):int(y+r), int(x-r):int(x+r)]
+            # cv2.imshow('mmm',mmm)
+            # cv2.waitKey()
+            self.targetX = x
+            self.targetY = y
+            return 1
+        else:
+            print('error')
+            return 0
+
+        
 
         
 
