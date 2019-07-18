@@ -21,17 +21,23 @@ class ObjectBoundingBox:
         self.x = x
         self.y = y
         self.z = z
+
         return
 
     def getName(self):
         return self.name
 
     def collide(self, obb):
+        #print('object collide test: ')
+        #print(self.name)
         if abs(self.pos[2] - obb.pos[2]) > self.z + obb.z + epsilon or math.sqrt((self.pos[0] - obb.pos[0]) ** 2 + (self.pos[1] - obb.pos[1])**2) > math.sqrt(self.x ** 2 + self.y ** 2) + math.sqrt(obb.x ** 2 + obb.y ** 2) + epsilon:
-            return False;
-        print('object.collide with')
-        print(self.name)
-        return True;
+            return False
+        #print('object.collide with')
+        #print
+        print('collide with', self.name)
+        print(obb.pos[0], obb.pos[1])
+
+        return True
 
 class GateCounter(ObjectBoundingBox):
     eulers = [0,0,0]
@@ -63,7 +69,9 @@ class GateCounter(ObjectBoundingBox):
         self.z_n = np.matmul(R_x, np.matmul(R_y, np.matmul(R_z,np.array(self.z_n)))).tolist()
 
         self.gate_in = (np.array(self.pos) + 0.5 * np.array(self.x_n)).tolist()
+        self.gate_in[2] = 0.5
         self.gate_out = (np.array(self.pos) - 0.5 * np.array(self.x_n)).tolist()
+        self.gate_out[2] = 0.5
 
         if type == 1:
             self.low_bound = [self.pos[0] + self.z * self.z_n[0] - 0.2, self.pos[1] + 0.5 * self.x_n[1],
@@ -75,6 +83,7 @@ class GateCounter(ObjectBoundingBox):
                               self.pos[2] - self.z * self.z_n[2] - 0.2]
             self.high_bound = [self.pos[0] + self.y * self.y_n[0] + 0.2, self.pos[1] - 0.5 * self.x_n[1],
                                self.pos[2] + self.z * self.z_n[2] + 0.2]
+        #print(self.name)
         #print(self.x_n)
         #print(self.y_n)
         #print(self.z_n)
@@ -82,9 +91,9 @@ class GateCounter(ObjectBoundingBox):
 
     def collide(self, obb):
 
-        if type == 1:
-            edge1_x, edge1_y, edge1_z = self.pos + self.z * self.z_n
-            edge2_x, edge2_y, edge2_z = self.pos - self.z * self.z_n
+        if self.type == 1:
+            edge1_x, edge1_y, edge1_z = np.array(self.pos) + self.z * np.array(self.z_n)
+            edge2_x, edge2_y, edge2_z = np.array(self.pos) - self.z * np.array(self.z_n)
             dis_xy1 = math.sqrt((obb.pos[0] - edge1_x) ** 2 + (obb.pos[1] - edge1_y) ** 2)
             dis_xy2 = math.sqrt((obb.pos[0] - edge2_x) ** 2 + (obb.pos[1] - edge2_y) ** 2)
             obb_r = math.sqrt(obb.x ** 2 + obb.y **2)
@@ -93,17 +102,17 @@ class GateCounter(ObjectBoundingBox):
                 return False
             if (obb.pos[2] < self.pos[2]+ self.y + obb.z +epsilon and obb.pos[2] > self.pos[2] + self.y - obb.z -epsilon) or (obb.pos[2] < self.pos[2]- self.y + obb.z +epsilon and obb.pos[2] > self.pos[2] - self.y - obb.z -epsilon):
                 if obb_r + epsilon > cross_d and obb.pos[0] > self.pos[0] - self.z and obb.pos[0] < self.pos[0] + self.z:
-                    print('true1')
+                    #print('true1')
                     return True
                 return False
             if obb_r + epsilon > dis_xy1 or obb_r + epsilon > dis_xy2:
-                print('true2')
+                #print('true2')
                 return True
             return False
 
-        if type == 2:
-            edge1_x, edge1_y, edge1_z = self.pos + self.y * self.y_n
-            edge2_x, edge2_y, edge2_z = self.pos - self.y * self.y_n
+        if self.type == 2:
+            edge1_x, edge1_y, edge1_z = np.array(self.pos) + self.y * np.array(self.y_n)
+            edge2_x, edge2_y, edge2_z = np.array(self.pos) - self.y * np.array(self.y_n)
             dis_xy1 = math.sqrt((obb.pos[0] - edge1_x) ** 2 + (obb.pos[1] - edge1_y) ** 2)
             dis_xy2 = math.sqrt((obb.pos[0] - edge2_x) ** 2 + (obb.pos[1] - edge2_y) ** 2)
             cross_d = abs(obb.pos[0] * self.y_n[1] - obb.pos[1] * self.y_n[0] -self.y_n[1] * self.pos[0] + self.y_n[0] * self.pos[1] ) / math.sqrt(self.y_n[1]**2 + self.y_n[0]**2)
@@ -118,9 +127,6 @@ class GateCounter(ObjectBoundingBox):
                 return True
             return False
         return False
-
-
-#gc = GateCounter([0,0,0],10,10,10,[0,-1.5707963705063,-1.5707963705063],'bala')
 
 
 
