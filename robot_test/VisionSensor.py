@@ -19,9 +19,28 @@ class VisionSensor():
         self.getPos()
         self.getImage()
         self.getDepthMap()
+
+    def ax2pos(self,xangle,x,y):
+        z = abs(self.pos[2])
+        d = math.tan(xangle * math.pi / 360) * z / 640
+        _x = self.pos[0] - (y - 360) * d 
+        _y = self.pos[1] - (x - 640) * d
+
+        Dm = 5e-3
+        Df = 5e3
+
+        dep = Dm +   (Df - Dm )* self.depthMap[int(y)][int(x)]
+        _z = self.pos[2] - dep
+        res = []
+        res.append(_x)
+        res.append(_y)
+        res.append(_z)
+        return res
+
     
     def getDepthMap(self):
         _, sensor, self.depthMap = vrep.simxGetVisionSensorDepthBuffer(self.clientID,self.zedHandle,vrep.simx_opmode_blocking)
+        self.depthMap = np.array(self.depthMap).reshape(720,1280)
         # self.sensor = sensor
 
     def getDepth(self, x, y):
@@ -125,7 +144,7 @@ class VisionSensor():
 
         kernel = np.ones((5,5),np.uint8)
         erosion = cv2.erode(mask,kernel)
-        erosion = cv2.erode(erosion,kernel)
+        # erosion = cv2.erode(erosion,kernel)
 
         contours,hier=cv2.findContours(erosion, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         rec = []
@@ -145,7 +164,7 @@ class VisionSensor():
         if mi > -1:
             x,y,w,h = rec[mi]
             # mmm = self.image[y:y+h, x:x+w]
-            # cv2.imshow('mmm',mmm)
+            # cv2.imwrite('mmm.png',mmm)
             # cv2.waitKey()
             self.targetX = x + w / 2
             self.targetY = y + h / 2
