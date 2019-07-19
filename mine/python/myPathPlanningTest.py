@@ -35,7 +35,8 @@ def dist(pos_x, pos_y):
 
     return np.linalg.norm(np.array(pos_x) - np.array(pos_y))
 
-def globalPathPlanning():
+
+def globalPathPlanning(): # 全局路径规划, 暴搜找三个门
     choose_gate = [-1,-1,-1]
     min_distance = sys.maxsize
     target_platform_pos = objects[4].pos
@@ -55,7 +56,7 @@ def globalPathPlanning():
     return chooose_gate
 
 
-def getObjectsInformation(clientID):
+def getObjectsInformation(clientID): # 获取所有物体的信息, 坐标, 大小等
     for i in range(0, len(object_names)):
         object_name = object_names[i]
         print(object_name)
@@ -101,13 +102,13 @@ def getObjectsInformation(clientID):
 
 
 
-def collideWithObstacles(quadcopter, obstacles):
+def collideWithObstacles(quadcopter, obstacles): #判断飞行器是否与obstacles中的物体相撞
     for obstacle in obstacles:
         if obstacle.collide(quadcopter):
             return True
     return False
 
-def isStateVaild(state):
+def isStateVaild(state): # 判断飞行器是否能飞至某一位置
     quadcopter = ObjectBoundingBox('quad', state, 0.25,0.25,0.25)
     if collideWithObstacles(quadcopter, objects):
         return False
@@ -115,7 +116,7 @@ def isStateVaild(state):
         return False
     return state[0] >= -15 and state[0] <= 15 and state[1] >= -15 and state[1] <= 15 and state[2] >= -15 and state[3] <= 15
 
-def canFlyDirectTo(start, goal):
+def canFlyDirectTo(start, goal): # 判断能否沿直线飞至某一点
     flag = True
     curr = copy.copy(start)
     step = (goal - start) / np.linalg.norm(goal - start) * 0.01
@@ -127,14 +128,13 @@ def canFlyDirectTo(start, goal):
 
 
 
-def flyDirectlyTo(clientID,  goal):
+def flyDirectlyTo(clientID,  goal, speed): # 控制飞行器沿直线飞至某一点, 步长为0.01*speed
     _, target = vrep.simxGetObjectHandle(clientID, "Quadricopter_target", vrep.simx_opmode_oneshot_wait)
     _, base = vrep.simxGetObjectHandle(clientID, "Quadricopter_base", vrep.simx_opmode_oneshot_wait)
     _, pos = vrep.simxGetObjectPosition(clientID, target, -1, vrep.simx_opmode_blocking)
     route = np.array([goal[0] - pos[0], goal[1] - pos[1], goal[2] - pos[2]])
     routeLen = np.linalg.norm(route)
     step = route / routeLen * 0.01
-    speed = 2
     while np.linalg.norm(np.array(pos) - np.array(goal)) > speed * 0.011 / 2:
         pos[0] += speed * step[0]
         pos[1] += speed * step[1]
@@ -147,7 +147,7 @@ def flyDirectlyTo(clientID,  goal):
 
 
 
-def flyTo(clientID, start, goal, start_derivative_v, end_derivative_v):
+def flyTo(clientID, start, goal, start_derivative_v, end_derivative_v): # 固定起点和终点的坐标和一阶导数, 控制飞行器沿xy平面上的三次曲线飞行
 
     _, target = vrep.simxGetObjectHandle(clientID, "Quadricopter_target", vrep.simx_opmode_oneshot_wait)
     _, base = vrep.simxGetObjectHandle(clientID, "Quadricopter_base", vrep.simx_opmode_oneshot_wait)
@@ -166,7 +166,7 @@ def flyTo(clientID, start, goal, start_derivative_v, end_derivative_v):
     for i in range(0, len(sampled_data)):
         x, y = coor_transformer.invTransPos(sampled_data[i][0], sampled_data[i][1])
         des = [x, y, 0.5]
-        if abs(cubic_curve.getDerivative2(sampled_data[i][0])) < 0.6:
+        if abs(cubic_curve.getDerivative2(sampled_data[i][0])) < 0.6: # 在路径上二阶导数较大的点，采用较小的飞行步长
             speed = 2.0
         else:
             speed = 0.7
