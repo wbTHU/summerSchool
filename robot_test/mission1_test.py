@@ -4,7 +4,13 @@ import math
 import time
 import ctypes
 import cv2
+import VisionSensor
+import Hand
+from matplotlib import pyplot as plt
 
+
+Sensor = VisionSensor.VisionSensor
+Hand = Hand.Hand
 
 tstep = 0.005
 baseName = 'Quadricopter_base'
@@ -25,18 +31,31 @@ def int2uint8(num):
     else:
         return num
 
-def ax2pos(zedpos,xangle,x,y): # 注意mission01飞机朝向 x,y指的是在图片的坐标系内像素点的坐标
-    z = abs(zedpos[2])
-    d = math.tan(xangle * math.pi / 360) * z / 640
-    # _x = zedpos[0] - (x - 640) * d
-    # _y = zedpos[1] - (y - 360) * d
-    _x = zedpos[0] - (y - 360) * d
-    _y = zedpos[1] - (x - 640) * d
+
+def ax2pos(leftZed, rightZed):
+    baseline = abs(leftZed.pos[1] - rightZed.pos[1])
+    x = leftZed.pos[0]
+    y = leftZed.pos[1]
+    z = leftZed.pos[2]
+
+    dx = abs(leftZed.targetX - rightZed.targetX)
+
+    alpha = 85 * math.pi / 180
+
+    tx = baseline * ( leftZed.targetX - 640) / dx
+    ty = math.tan(alpha / 2) * z / 640 * (leftZed.targetY - 360)
+    tz = baseline / (dx * math.tan(alpha / 2) / 640)
+
+    _x = x - ty
+    _y = y - tx
+    _z = z - tz
+
     res = []
     res.append(_x)
     res.append(_y)
+    res.append(_z)
+    
     return res
-
 
 print ('program started!')
 vrep.simxFinish(-1)
@@ -56,11 +75,11 @@ vrep.simxSetFloatingParameter(clientID,vrep.sim_floatparam_simulation_time_step,
 vrep.simxSynchronous(clientID,True)
 vrep.simxStartSimulation(clientID,vrep.simx_opmode_oneshot)
 
-zedHandle = np.zeros((zedNum,),dtype=np.int)
+# zedHandle = np.zeros((zedNum,),dtype=np.int)
 
-for i in range(zedNum):
-    zN = zedName + str(i)
-    _, zedHandle[i] = vrep.simxGetObjectHandle(clientID,zN,vrep.simx_opmode_blocking)
+# for i in range(zedNum):
+#     zN = zedName + str(i)
+#     _, zedHandle[i] = vrep.simxGetObjectHandle(clientID,zN,vrep.simx_opmode_blocking)
 
 
 _, landHandle = vrep.simxGetObjectHandle(clientID,landName,vrep.simx_opmode_blocking)
@@ -81,114 +100,113 @@ _, landP = vrep.simxGetObjectPosition(clientID,landHandle,-1,vrep.simx_opmode_bl
 pos = originalP
 
 
+# h = Hand(clientID,'goto_close')
+
+
+# vrep.simxSynchronousTrigger(clientID)
+
+# h.close()
+# vrep.simxSynchronousTrigger(clientID)
+
+
+_, ori = vrep.simxGetObjectOrientation(clientID,baseHandle,-1,vrep.simx_opmode_blocking)
+print(ori)
+zd0 = Sensor(clientID,zedName+'0')
+zd1 = Sensor(clientID,zedName+'1')
+
+baseline = abs(zd0.pos[1] - zd1.pos[1])
+print(baseline)
+zd0.findTarget()
+zd1.findTarget()
+
+x = zd0.pos[0]
+y = zd0.pos[1]
+z = zd0.pos[2]
+dx = abs(zd0.targetX - zd1.targetX)
+print(dx)
+
+alpha = 85 * math.pi / 180
+
+tx = baseline * ( zd0.targetX - 640) / dx
+_y = y - tx
+
+_z = z - baseline / (dx * math.tan(alpha / 2) / 640)
+
+ty = math.tan(alpha / 2) * z / 640 * (zd0.targetY - 360)
+_x = x - ty
+
+print(_x)
+print(_y)
+print(_z)
 
 
 
-vrep.simxSynchronousTrigger(clientID)
-    
-# 利用image.py中的方法找二维码（可视区域）中心点
-vision = []
-trans = []
-for i in range(zedNum):
-    _, sensor, v = vrep.simxGetVisionSensorImage(clientID,zedHandle[i],0,vrep.simx_opmode_blocking)
-    vision.append(v)
-
-for v in vision:
-    ts = []
-    for i in v:
-        t = int2uint8(i)
-        ts.append(t)
-    trans.append(ts)
-
-zedPos = []
-
-for i in range(zedNum):
-    _, zP = vrep.simxGetObjectPosition(clientID, zedHandle[i],-1,vrep.simx_opmode_blocking)
-    zedPos.append(zP)
 
 
-masks = []
+# r = zd0.findTarget()
+# print(r)
+# print(zd0.targetX)
+# print(zd0.targetY)
 
-for v in trans:
-    re = []
-    for i in range(row):
-        t = []
-        for j in range(col):
-            s = []
-            for k in range(3):
-                m = v[i * col * 3 + j * 3 + k]
-                s.append(m)
-            t.append(s)
-        re.append(t)
-    mat = np.array(re,dtype=np.uint8)
-    mat1 = cv2.flip(mat,0,dst=None) #垂直镜像
-    
-    gray = cv2.cvtColor(mat1,cv2.COLOR_BGR2GRAY)
-    mask = cv2.inRange(gray,limit,255) #将limit-255范围内的像素点全部转化为白色（255），0-limit为黑色（0）,达到凸显二维码的目的
-    # cv2.imshow('hhh',mask)
-    # cv2.waitKey()
-    masks.append(mask)
 
-targetX = 0
-targetY = 0
 
-tx = []
-ty = []
 
-for q in range(zedNum):
-    mask = masks[q]
 
-    # 先找到白色大块边界（去除边界黑块影响）
-    # 利用黑色像素的位置得到二维码的中心坐标
+# zeds = []
+# for i in range(zedNum):
+#     zN = zedName + str(i)
+#     z = Sensor(clientID,zN)
+#     zeds.append(z)
 
-    MAXX=0
-    MINX=100000
-    MAXY=0
-    MINY=100000
-    xlen = 1280
-    ylen = 720
+# # zeds[0].findBlack()
+# zeds[0].findQR()
+# # zeds[0].findTarget()
 
-    for i in range(xlen): 
-        for j in range(ylen):
-            if mask[j][i] > 0: # 找白色
-                MAXX=max(MAXX,i)
-                MINX=min(MINX,i)
-                MAXY=max(MAXY,j)
-                MINY=min(MINY,j)
-                # 得到白色边界
+# # zeds[1].findCircle()
 
-    maxx=0
-    minx=100000
-    maxy=0
-    miny=100000
-    xlen = 1280
-    ylen = 720
+# cv2.imwrite('I.png',zeds[0].image)
 
-    for i in range(xlen): 
-        for j in range(ylen):
-            if mask[j][i] == 0 and i >= MINX and i <= MAXX and j >= MINY and j <= MAXY: # 找黑色
-                maxx=max(maxx,i)
-                minx=min(minx,i)
-                maxy=max(maxy,j)
-                miny=min(miny,j)
-    center_x = (maxx+minx)/2
-    center_y = (maxy+miny)/2
+# Df = 5e3
+# Dm = 5e-3
+# xA = xAngle * math.pi / 180
 
-    print(center_x)
-    print(center_y)
 
-    res = ax2pos(zedPos[q],xAngle,center_x,center_y)
-    tx.append(res[0])
-    ty.append(res[1])
 
-    # tx.append(center_x)
-    # ty.append(center_y)
-              
-targetX = (tx[0] + tx[1]) / 2
-targetY = (ty[0] + ty[1]) / 2
+# depthMap = zeds[0].depthMap
 
-print(targetX)
-print(targetY)
+
+
+# z = zeds[0].pos[2]
+
+# _x = zeds[0].targetX
+# _y = zeds[0].targetY
+# print('_x is ' + str(_x))
+# print('_y is ' + str(_y))
+
+
+# dep = Dm +   (Df - Dm )* depthMap[int(_y)][int(_x)]
+
+# print(z - dep)
+
+# res = ax2pos(zeds[0].pos,xAngle,_x,_y)
+# x = res[0]
+# y = res[1]
+# print('x is ' + str(x))
+# print('y is ' + str(y))
+
+# zeds[1].findQR()
+# res1 = ax2pos(zeds[1].pos,xAngle,zeds[1].targetX,zeds[1].targetY)
+# xx = (res[0] + res1[0]) / 2
+# yy = (res[1] + res1[1]) / 2
+# print('xx is ' + str(xx))
+# print('yy is ' + str(yy))
+
+# lm = cv2.cvtColor(zeds[0].image,cv2.COLOR_BGR2GRAY)
+# rm = cv2.cvtColor(zeds[1].image,cv2.COLOR_BGR2GRAY)
+# stereo = cv2.StereoSGBM_create(1,16,5)
+# disparity = stereo.compute(lm,rm)
+# plt.imshow(disparity,'gray')
+# plt.show()
 
 
 # _,nowPos = vrep.simxGetObjectPosition(clientID,baseHandle,-1,vrep.simx_opmode_blocking)
@@ -200,16 +218,18 @@ print(targetY)
 # _y = res[1]
 
 
-_x = targetX
-_y = targetY
+# _x = targetX
+# _y = targetY
 
 
-print('_x is'+ str(_x))
-print('_y is'+ str(_y)) 
+# print('_x is '+ str(_x))
+# print('_y is '+ str(_y)) 
+
+# vrep.simxPauseSimulation(clientID,vrep.simx_opmode_oneshot)
+# vrep.simxStopSimulation(clientID,vrep.simx_opmode_oneshot)
 
 
-
-if vrep.simxGetConnectionId(clientID) != -1:
+# if vrep.simxGetConnectionId(clientID) != -1:
 
     # 运动
     # if abs(landP[2] - pos[2]) < 0.2:
@@ -220,51 +240,62 @@ if vrep.simxGetConnectionId(clientID) != -1:
     
     # vrep.simxPauseCommunication(clientID, True)
 
-    print('start to go back')
+    # print('start to go back')
 
 
-    if pos[0] > _x:
-        Xsign = -1
-    else: 
-        Xsign = 1
+    # if pos[0] > _x:
+    #     Xsign = -1
+    # else: 
+    #     Xsign = 1
 
-    if pos[1] > _y:
-        Ysign = -1
-    else: 
-        Ysign = 1
+    # if pos[1] > _y:
+    #     Ysign = -1
+    # else: 
+    #     Ysign = 1
 
-    while abs(pos[0] - _x) > 0.05:
-        pos[0] = pos[0] + Xsign * 0.005
-        vrep.simxSetObjectPosition(clientID,targetHandle,-1,pos,vrep.simx_opmode_blocking)
-        vrep.simxSynchronousTrigger(clientID)
-        vrep.simxGetPingTime(clientID)
+    # while abs(pos[0] - _x) > 0.05:
+    #     pos[0] = pos[0] + Xsign * 0.005
+    #     vrep.simxSetObjectPosition(clientID,targetHandle,-1,pos,vrep.simx_opmode_blocking)
+    #     vrep.simxSynchronousTrigger(clientID)
+    #     vrep.simxGetPingTime(clientID)
 
-    while abs(pos[1] - _y) > 0.05:
-        pos[1] = pos[1] + Ysign * 0.005
-        vrep.simxSetObjectPosition(clientID,targetHandle,-1,pos,vrep.simx_opmode_blocking)
-        vrep.simxSynchronousTrigger(clientID)
-        vrep.simxGetPingTime(clientID)
+    # while abs(pos[1] - _y) > 0.05:
+    #     pos[1] = pos[1] + Ysign * 0.005
+    #     vrep.simxSetObjectPosition(clientID,targetHandle,-1,pos,vrep.simx_opmode_blocking)
+    #     vrep.simxSynchronousTrigger(clientID)
+    #     vrep.simxGetPingTime(clientID)
 
-    print('end?')
-    vrep.simxSynchronousTrigger(clientID)
-    vrep.simxGetPingTime(clientID)
+    # print('end?')
+    # vrep.simxSynchronousTrigger(clientID)
+    # vrep.simxGetPingTime(clientID)
 
-    print('land')
+    # print('land')
     
-    k = vrep.simxReadProximitySensor(clientID,sensorHandle,vrep.simx_opmode_blocking)
-    isDetected = k[1]
+    # k = vrep.simxReadProximitySensor(clientID,sensorHandle,vrep.simx_opmode_blocking)
+    # isDetected = k[1]
     
-    while( isDetected != True):
-        pos[2] = pos[2] -  0.005
-        vrep.simxSetObjectPosition(clientID,targetHandle,-1,pos,vrep.simx_opmode_blocking)
-        vrep.simxSynchronousTrigger(clientID)
-        vrep.simxGetPingTime(clientID)
-        k = vrep.simxReadProximitySensor(clientID,sensorHandle,vrep.simx_opmode_blocking)
-        isDetected = k[1]
-        print(isDetected)
+    # while( isDetected != True):
+    #     pos[2] = pos[2] -  0.005
+    #     vrep.simxSetObjectPosition(clientID,targetHandle,-1,pos,vrep.simx_opmode_blocking)
+    #     vrep.simxSynchronousTrigger(clientID)
+    #     vrep.simxGetPingTime(clientID)
+    #     k = vrep.simxReadProximitySensor(clientID,sensorHandle,vrep.simx_opmode_blocking)
+    #     isDetected = k[1]
+    #     print(isDetected)
     
-    print('land success!')
+    # rs = 0.2
 
+    # while( rs > 0):
+    #     pos[2] = pos[2] -  0.005
+    #     vrep.simxSetObjectPosition(clientID,targetHandle,-1,pos,vrep.simx_opmode_blocking)
+    #     vrep.simxSynchronousTrigger(clientID)
+    #     vrep.simxGetPingTime(clientID)
+    #     rs = rs - 0.005
+
+    
+    # print('land success!')
+
+    # vrep.simxPauseSimulation(clientID,vrep.simx_opmode_oneshot)
 
 
 
