@@ -126,17 +126,18 @@ class VisionSensor():
         lower_red = np.array([0,100,100])
         upper_red = np.array([10,255,255])
         red_mask = cv2.inRange(im_hsv,lower_red,upper_red) # 红色区域取255（白色），其余取0（黑色）
-        
+        # cv2.imshow('red_mask.png',red_mask)
+        # cv2.waitKey()
 
-        binary = cv2.Canny(red_mask, 0, 60, apertureSize = 3)
+        # binary = cv2.Canny(red_mask, 0, 100, apertureSize = 3)
         # cv2.imshow('binary.png',binary)
         # cv2.waitKey()
-        contours, cnt = cv2.findContours(binary,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE) # 提取矩形轮廓
+        contours, cnt = cv2.findContours(red_mask,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE) # 提取矩形轮廓
 
         rec = []
         for c in contours:
             x,y,w,h = cv2.boundingRect(c)#计算出一个简单地边界框
-            if w < h : # 判断得到的矩形的大小是否符合（二维码的某个块即可）
+            if w < h : # 判断得到的矩形的大小是否符合
                 rec.append([x,y,w,h])
 
         mi = -1
@@ -150,7 +151,7 @@ class VisionSensor():
         if mi > -1:
             x,y,w,h = rec[mi]     
 
-            # mmm = self.image[y:y+h, x:x+w]
+            mmm = self.image[y:y+h, x:x+w]
             # cv2.imshow('mmm.png',mmm)
             # cv2.waitKey()
 
