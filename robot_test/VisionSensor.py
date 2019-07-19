@@ -20,11 +20,14 @@ class VisionSensor():
         self.getImage()
         self.getDepthMap()
 
-    def ax2pos(self,xangle,x,y):
+    def ax2pos(self,xangle, x, y, ori): # 图像坐标系向全局坐标系的转化（不是很准确） ori为整体的orientation，考虑转向
         z = abs(self.pos[2])
         d = math.tan(xangle * math.pi / 360) * z / 640
-        _x = self.pos[0] - (y - 360) * d 
-        _y = self.pos[1] - (x - 640) * d
+
+        theta = ori[2] # 转向角(弧度制) 
+
+        _x = self.pos[0] - ((y - 360) * d * math.cos(theta) - (x - 640) * d * math.sin(theta))
+        _y = self.pos[1] - ((x - 640) * d * math.cos(theta) + (y - 360) * d * math.sin(theta))
 
         Dm = 5e-3
         Df = 5e3
@@ -144,7 +147,7 @@ class VisionSensor():
 
         kernel = np.ones((5,5),np.uint8)
         erosion = cv2.erode(mask,kernel)
-        # erosion = cv2.erode(erosion,kernel)
+        erosion = cv2.erode(erosion,kernel)
 
         contours,hier=cv2.findContours(erosion, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         rec = []
@@ -164,11 +167,14 @@ class VisionSensor():
         if mi > -1:
             x,y,w,h = rec[mi]
             # mmm = self.image[y:y+h, x:x+w]
-            # cv2.imwrite('mmm.png',mmm)
+            # cv2.imshow('mmm.png',mmm)
             # cv2.waitKey()
             self.targetX = x + w / 2
             self.targetY = y + h / 2
-            return 1
+            if w * self.pos[2] > 300:
+                return 1 # 找到完整二维码
+            else:
+                return 2 # 找到二维码的一个块
         else:
             print('error!')
             return 0
