@@ -34,6 +34,7 @@ def int2uint8(num):
 
 def ax2pos(leftZed, rightZed):
     baseline = abs(leftZed.pos[1] - rightZed.pos[1])
+    baseline = 0.12
     x = leftZed.pos[0]
     y = leftZed.pos[1]
     z = leftZed.pos[2]
@@ -42,9 +43,11 @@ def ax2pos(leftZed, rightZed):
 
     alpha = 85 * math.pi / 180
 
-    tx = baseline * ( leftZed.targetX - 640) / dx
-    ty = math.tan(alpha / 2) * z / 640 * (leftZed.targetY - 360)
+    
     tz = baseline / (dx * math.tan(alpha / 2) / 640)
+    # tx = baseline * ( leftZed.targetX - 640) / dx
+    tx = math.tan(alpha / 2) * tz / 640 * (leftZed.targetX - 640)
+    ty = math.tan(alpha / 2) * tz / 640 * (leftZed.targetY - 360)
 
     _x = x - ty
     _y = y - tx
@@ -54,7 +57,7 @@ def ax2pos(leftZed, rightZed):
     res.append(_x)
     res.append(_y)
     res.append(_z)
-    
+
     return res
 
 print ('program started!')
@@ -100,46 +103,48 @@ _, landP = vrep.simxGetObjectPosition(clientID,landHandle,-1,vrep.simx_opmode_bl
 pos = originalP
 
 
-# h = Hand(clientID,'goto_close')
+# # h = Hand(clientID,'goto_close')
 
 
-# vrep.simxSynchronousTrigger(clientID)
+# # vrep.simxSynchronousTrigger(clientID)
 
-# h.close()
-# vrep.simxSynchronousTrigger(clientID)
-
-
-_, ori = vrep.simxGetObjectOrientation(clientID,baseHandle,-1,vrep.simx_opmode_blocking)
-print(ori)
-zd0 = Sensor(clientID,zedName+'0')
-zd1 = Sensor(clientID,zedName+'1')
-
-baseline = abs(zd0.pos[1] - zd1.pos[1])
-print(baseline)
-zd0.findTarget()
-zd1.findTarget()
-
-x = zd0.pos[0]
-y = zd0.pos[1]
-z = zd0.pos[2]
-dx = abs(zd0.targetX - zd1.targetX)
-print(dx)
-
-alpha = 85 * math.pi / 180
-
-tx = baseline * ( zd0.targetX - 640) / dx
-_y = y - tx
-
-_z = z - baseline / (dx * math.tan(alpha / 2) / 640)
-
-ty = math.tan(alpha / 2) * z / 640 * (zd0.targetY - 360)
-_x = x - ty
-
-print(_x)
-print(_y)
-print(_z)
+# # h.close()
+# # vrep.simxSynchronousTrigger(clientID)
 
 
+# # _, ori = vrep.simxGetObjectOrientation(clientID,baseHandle,-1,vrep.simx_opmode_blocking)
+# # print(ori)
+# zd0 = Sensor(clientID,zedName+'0')
+# zd1 = Sensor(clientID,zedName+'1')
+
+# baseline = abs(zd0.pos[1] - zd1.pos[1])
+# baseline = 0.12
+# print(baseline)
+# zd0.findTarget()
+# zd1.findTarget()
+# # zd0.findQR()
+# # zd1.findQR()
+
+# x = zd0.pos[0]
+# y = zd0.pos[1]
+# z = zd0.pos[2]
+# dx = math.sqrt((zd0.targetX - zd1.targetX)**2 + (zd0.targetY - zd1.targetY)**2)
+# print(dx)
+
+# # alpha = 85 * math.pi / 180
+
+# # tx = baseline * ( zd0.targetX - 640) / dx
+# # _y = y - tx
+
+# # _z = z - baseline / (dx * math.tan(alpha / 2) / 640)
+
+# # ty = math.tan(alpha / 2) * z / 640 * (zd0.targetY - 360)
+# # _x = x - ty
+
+# res = ax2pos(zd0,zd1)
+# print(res)
+
+# vrep.simxStopSimulation(clientID,vrep.simx_opmode_oneshot)
 
 
 
@@ -269,19 +274,22 @@ print(_z)
     # vrep.simxSynchronousTrigger(clientID)
     # vrep.simxGetPingTime(clientID)
 
-    # print('land')
-    
-    # k = vrep.simxReadProximitySensor(clientID,sensorHandle,vrep.simx_opmode_blocking)
-    # isDetected = k[1]
-    
-    # while( isDetected != True):
-    #     pos[2] = pos[2] -  0.005
-    #     vrep.simxSetObjectPosition(clientID,targetHandle,-1,pos,vrep.simx_opmode_blocking)
-    #     vrep.simxSynchronousTrigger(clientID)
-    #     vrep.simxGetPingTime(clientID)
-    #     k = vrep.simxReadProximitySensor(clientID,sensorHandle,vrep.simx_opmode_blocking)
-    #     isDetected = k[1]
-    #     print(isDetected)
+print('land')
+
+k = vrep.simxReadProximitySensor(clientID,sensorHandle,vrep.simx_opmode_blocking)
+isDetected = k[1]
+
+while( isDetected != True):
+    pos[2] = pos[2] -  0.005
+    vrep.simxSetObjectPosition(clientID,targetHandle,-1,pos,vrep.simx_opmode_blocking)
+    vrep.simxSynchronousTrigger(clientID)
+    vrep.simxGetPingTime(clientID)
+    k = vrep.simxReadProximitySensor(clientID,sensorHandle,vrep.simx_opmode_blocking)
+    isDetected = k[1]
+    print(isDetected)
+
+
+vrep.simxStopSimulation(clientID,vrep.simx_opmode_oneshot)
     
     # rs = 0.2
 
