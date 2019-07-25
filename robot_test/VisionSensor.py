@@ -120,7 +120,7 @@ class VisionSensor():
             
 
     def findTarget(self): # 找红色圆柱体target
-        mat = cv2.blur(self.image,(5,5)) # 模糊化降噪处理
+        mat = cv2.blur(self.image,(1,1)) # 模糊化降噪处理
         im_hsv = cv2.cvtColor(mat,cv2.COLOR_BGR2HSV) # 转换为HSV
 
         lower_red = np.array([0,100,100])
@@ -129,6 +129,10 @@ class VisionSensor():
         # cv2.imshow('red_mask.png',red_mask)
         # cv2.waitKey()
 
+        kernel = np.ones((5,5),np.uint8)
+        red_mask = cv2.dilate(red_mask, kernel) # 膨胀
+        red_mask = cv2.erode(red_mask, kernel) # 腐蚀
+        
         # binary = cv2.Canny(red_mask, 0, 100, apertureSize = 3)
         # cv2.imshow('binary.png',binary)
         # cv2.waitKey()
@@ -151,7 +155,7 @@ class VisionSensor():
         if mi > -1:
             x,y,w,h = rec[mi]     
 
-            mmm = self.image[y:y+h, x:x+w]
+            # mmm = self.image[y:y+h, x:x+w]
             # cv2.imshow('mmm.png',mmm)
             # cv2.waitKey()
 
