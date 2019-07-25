@@ -32,7 +32,7 @@ def int2uint8(num):
         return num
 
 
-def ax2pos(leftZed, rightZed):
+def ax2pos(leftZed, rightZed, ori):
     baseline = abs(leftZed.pos[1] - rightZed.pos[1])
     baseline = 0.12
     x = leftZed.pos[0]
@@ -43,14 +43,16 @@ def ax2pos(leftZed, rightZed):
 
     alpha = 85 * math.pi / 180
 
+    theta = ori[2]  # 旋转角
+
     
     tz = baseline / (dx * math.tan(alpha / 2) / 640)
     # tx = baseline * ( leftZed.targetX - 640) / dx
     tx = math.tan(alpha / 2) * tz / 640 * (leftZed.targetX - 640)
     ty = math.tan(alpha / 2) * tz / 640 * (leftZed.targetY - 360)
 
-    _x = x - ty
-    _y = y - tx
+    _x = x -  ty * math.cos(theta) + tx * math.sin(theta)  # 0: -ty  90: +tx
+    _y = y -  tx * math.cos(theta) - ty * math.sin(theta)  # 0: -tx  90: -ty
     _z = z - tz
 
     res = []
@@ -114,13 +116,17 @@ pos = originalP
 
 # # _, ori = vrep.simxGetObjectOrientation(clientID,baseHandle,-1,vrep.simx_opmode_blocking)
 # # print(ori)
-# zd0 = Sensor(clientID,zedName+'0')
+zd0 = Sensor(clientID,zedName+'0')
 # zd1 = Sensor(clientID,zedName+'1')
 
 # baseline = abs(zd0.pos[1] - zd1.pos[1])
 # baseline = 0.12
 # print(baseline)
-# zd0.findTarget()
+rr = zd0.findTarget()
+print(rr)
+
+vrep.simxStopSimulation(clientID,vrep.simx_opmode_oneshot)
+
 # zd1.findTarget()
 # # zd0.findQR()
 # # zd1.findQR()
