@@ -29,44 +29,9 @@ def int2uint8(num):
         return num
 
 
-def ax2pos(leftZed, rightZed, ori):
-    # baseline = abs(leftZed.pos[1] - rightZed.pos[1])
-    baseline = 0.12
-
-    theta = ori[2]
-
-    x = leftZed.pos[0]
-    y = leftZed.pos[1]
-    z = leftZed.pos[2]
-
-    dx = abs(leftZed.targetX - rightZed.targetX)
-
-    alpha = 85 * math.pi / 180
-
-    
-    tz = baseline / (dx * math.tan(alpha / 2) / 640)
-    # tx = baseline * ( leftZed.targetX - 640) / dx
-    tx = math.tan(alpha / 2) * tz / 640 * (leftZed.targetX - 640)
-    ty = math.tan(alpha / 2) * tz / 640 * (leftZed.targetY - 360)
-
-    # _x = x - ty
-    # _y = y - tx
-    # _z = z - tz
-
-    _x = x + (tx * math.sin(theta) + tz * math.cos(theta)) # 0: +tz; 90: +tx; 180: -tz; -90: -tx
-    _y = y - (tx * math.cos(theta) - tz * math.sin(theta)) # 0: -tx; 90: +tz; 180: +tx; -90: -tz
-    _z = z - ty
-
-    res = []
-    res.append(_x)
-    res.append(_y)
-    res.append(_z)
-
-    return res
 
 
-
-def tpos(zedPos, dx, axis, zori, ori):  
+def tpos(zedPos, dx, axis, zori, ori):  # zori 为相机   ori为整体
     baseline = 0.12
 
     theta = ori[2]
@@ -94,25 +59,18 @@ def tpos(zedPos, dx, axis, zori, ori):
 
     m = math.atan(ty / tz)
 
-    tt = a + m
+    tt = a - m
 
     print(l)
     print(tt)
 
     tz = l * math.cos(tt)
 
-    ty = - l * math.sin(tt)
+    ty = l * math.sin(tt)
 
-    # _x = x - ty
-    # _y = y - tx
-    # _z = z - tz
 
-    # _x = x + (tx * math.sin(theta) + tz * math.cos(theta)) # 0: +tz; 90: +tx; 180: -tz; -90: -tx
-    # _y = y - (tx * math.cos(theta) - tz * math.sin(theta)) # 0: -tx; 90: +tz; 180: +tx; -90: -tz
-    # _z = z - ty
-
-    _x = x + (tx * math.sin(theta) - ty * math.cos(theta)) # 0: -ty; 90: +tx; 180: +ty; -90: -tx
-    _y = y - (tx * math.cos(theta) + ty * math.sin(theta)) # 0: -tx; 90: -ty; 180: +tx; -90: +ty
+    _x = x + tx * math.sin(theta) - ty * math.cos(theta) # 0: -ty; 90: +tx; 180: +ty; -90: -tx
+    _y = y - tx * math.cos(theta) - ty * math.sin(theta) # 0: -tx; 90: -ty; 180: +tx; -90: +ty
     _z = z - tz
 
     res = []
@@ -173,10 +131,6 @@ rZed.findTarget()
 
 dx = abs( lZed.targetX - rZed.targetX )
 print(dx)
-
-dy = abs( lZed.targetY - rZed.targetY )
-print(dy)
-
 
 axis = [lZed.targetX, lZed.targetY ]
 
