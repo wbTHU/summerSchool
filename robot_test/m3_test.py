@@ -30,7 +30,7 @@ def int2uint8(num):
 
 
 def ax2pos(leftZed, rightZed, ori):
-    baseline = abs(leftZed.pos[1] - rightZed.pos[1])
+    # baseline = abs(leftZed.pos[1] - rightZed.pos[1])
     baseline = 0.12
 
     theta = ori[2]
@@ -65,6 +65,67 @@ def ax2pos(leftZed, rightZed, ori):
     return res
 
 
+
+def tpos(zedPos, dx, axis, zori, ori):  
+    baseline = 0.12
+
+    theta = ori[2]
+
+    x = zedPos[0]
+    y = zedPos[1]
+    z = zedPos[2]
+
+    alpha = 85 * math.pi / 180
+
+    a = math.pi -  zori[0]
+    # b = zori[1]
+    # c = zori[2]
+
+
+    
+    tz = baseline / (dx * math.tan(alpha / 2) / 640)
+    # tx = baseline * ( leftZed.targetX - 640) / dx
+    tx = math.tan(alpha / 2) * tz / 640 * (axis[0] - 640)
+    ty = math.tan(alpha / 2) * tz / 640 * (axis[1] - 360)
+
+    print(str([tx, ty, tz]))
+
+    l = math.sqrt(tz ** 2 + ty ** 2)
+
+    m = math.atan(ty / tz)
+
+    tt = a + m
+
+    print(l)
+    print(tt)
+
+    tz = l * math.cos(tt)
+
+    ty = - l * math.sin(tt)
+
+    # _x = x - ty
+    # _y = y - tx
+    # _z = z - tz
+
+    # _x = x + (tx * math.sin(theta) + tz * math.cos(theta)) # 0: +tz; 90: +tx; 180: -tz; -90: -tx
+    # _y = y - (tx * math.cos(theta) - tz * math.sin(theta)) # 0: -tx; 90: +tz; 180: +tx; -90: -tz
+    # _z = z - ty
+
+    _x = x + (tx * math.sin(theta) - ty * math.cos(theta)) # 0: -ty; 90: +tx; 180: +ty; -90: -tx
+    _y = y - (tx * math.cos(theta) + ty * math.sin(theta)) # 0: -tx; 90: -ty; 180: +tx; -90: +ty
+    _z = z - tz
+
+    res = []
+    res.append(_x)
+    res.append(_y)
+    res.append(_z)
+
+    return res
+
+
+
+
+
 print ('program started!')
 vrep.simxFinish(-1)
 
@@ -84,8 +145,6 @@ vrep.simxSynchronous(clientID,True)
 vrep.simxStartSimulation(clientID,vrep.simx_opmode_oneshot)
 
 
-
-
 _, landHandle = vrep.simxGetObjectHandle(clientID,landName,vrep.simx_opmode_blocking)
     
 _, baseHandle = vrep.simxGetObjectHandle(clientID, baseName, vrep.simx_opmode_blocking)
@@ -95,6 +154,91 @@ _, targetHandle = vrep.simxGetObjectHandle(clientID,targetName,vrep.simx_opmode_
 print('Handles available!')
 
 vrep.simxSynchronousTrigger(clientID)
+
+lZed = Sensor(clientID,'zed_vision1')
+
+rZed = Sensor(clientID,'zed_vision0')
+
+_, zori = vrep.simxGetObjectOrientation(clientID, lZed.zedHandle, -1, vrep.simx_opmode_blocking)
+
+print(zori)
+
+_, ori = vrep.simxGetObjectOrientation(clientID, baseHandle, -1, vrep.simx_opmode_blocking)
+
+print(ori)
+
+lZed.findTarget()
+
+rZed.findTarget()
+
+dx = abs( lZed.targetX - rZed.targetX )
+print(dx)
+
+dy = abs( lZed.targetY - rZed.targetY )
+print(dy)
+
+
+axis = [lZed.targetX, lZed.targetY ]
+
+r = tpos(lZed.pos,dx,axis, zori,ori )
+
+print(r)
+
+# ll = lZed.image
+# rr = rZed.image
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ll = cv2.cvtColor(ll,cv2.COLOR_RGB2GRAY)
+# rr = cv2.cvtColor(rr,cv2.COLOR_RGB2GRAY)
+
+
+
+
+
+# blockSize = 48
+# stereo = cv2.StereoSGBM_create(minDisparity=1,
+#              numDisparities=16,
+#              blockSize=11,
+#              uniquenessRatio = 5,
+#              speckleWindowSize = 100,
+#              speckleRange = 1,
+#              disp12MaxDiff = 200,
+#              P1 = 8*3*blockSize**2,
+#              P2 = 32*3*blockSize**2)
+# disparity = stereo.compute(ll,rr)
+
+# plt.imshow(disparity,'gray')
+# plt.show()
+
+# lzPos = lZed.pos
+
+# _, ori = vrep.simxGetObjectOrientation(clientID, baseHandle, -1, vrep.simx_opmode_blocking)
+# print(ori)
+
+# dx = abs(disparity[200][800] ) / 16
+
+# print(dx)
+
+
+# a = [800, 200]
+# res = tpos(lzPos, dx, a, zori, ori)
+
+# print(res)
+
+vrep.simxPauseSimulation(clientID,vrep.simx_opmode_oneshot)
+vrep.simxStopSimulation(clientID, vrep.simx_opmode_oneshot)
 
 
 
