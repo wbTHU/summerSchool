@@ -31,7 +31,7 @@ def int2uint8(num):
 
 
 
-def tpos(zedPos, dx, axis, zori, ori):  # zori 为相机   ori为整体
+def tpos(zedPos, dx, axis, ori):  # zori 为相机   ori为整体
     baseline = 0.12
 
     theta = ori[2]
@@ -42,7 +42,7 @@ def tpos(zedPos, dx, axis, zori, ori):  # zori 为相机   ori为整体
 
     alpha = 85 * math.pi / 180
 
-    a = math.pi -  zori[0]
+    a = (180 - 125) * math.pi / 180
     # b = zori[1]
     # c = zori[2]
 
@@ -61,7 +61,7 @@ def tpos(zedPos, dx, axis, zori, ori):  # zori 为相机   ori为整体
 
     tt = a - m
 
-    print(l)
+    print(a)
     print(tt)
 
     tz = l * math.cos(tt)
@@ -69,8 +69,8 @@ def tpos(zedPos, dx, axis, zori, ori):  # zori 为相机   ori为整体
     ty = l * math.sin(tt)
 
 
-    _x = x + tx * math.sin(theta) - ty * math.cos(theta) # 0: -ty; 90: +tx; 180: +ty; -90: -tx
-    _y = y - tx * math.cos(theta) - ty * math.sin(theta) # 0: -tx; 90: -ty; 180: +tx; -90: +ty
+    _x = x + tx * math.sin(theta) + ty * math.cos(theta) 
+    _y = y - tx * math.cos(theta) + ty * math.sin(theta) 
     _z = z - tz
 
     res = []
@@ -117,9 +117,7 @@ lZed = Sensor(clientID,'zed_vision1')
 
 rZed = Sensor(clientID,'zed_vision0')
 
-_, zori = vrep.simxGetObjectOrientation(clientID, lZed.zedHandle, -1, vrep.simx_opmode_blocking)
 
-print(zori)
 
 _, ori = vrep.simxGetObjectOrientation(clientID, baseHandle, -1, vrep.simx_opmode_blocking)
 
@@ -134,7 +132,7 @@ print(dx)
 
 axis = [lZed.targetX, lZed.targetY ]
 
-r = tpos(lZed.pos,dx,axis, zori,ori )
+r = tpos(lZed.pos,dx,axis,ori )
 
 print(r)
 
