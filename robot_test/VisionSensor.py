@@ -58,10 +58,12 @@ class VisionSensor():
         if self.zedHandle != None:
             vrep.simxSynchronousTrigger(self.clientID)
             _, sensor, v = vrep.simxGetVisionSensorImage(self.clientID,self.zedHandle,0,vrep.simx_opmode_blocking)
-            ts = []
-            for i in v:
-                t = int2uint8(i)
-                ts.append(t)
+            # ts = []
+            # for i in v:
+            #     t = int2uint8(i)
+            #     ts.append(t)
+
+            ts = list(map(int2uint8, v))
 
             t = np.array(ts)
             re = t.reshape(720,1280,3) # 变为三维矩阵
@@ -141,8 +143,8 @@ class VisionSensor():
         rec = []
         for c in contours:
             x,y,w,h = cv2.boundingRect(c)#计算出一个简单地边界框
-            if w < h : # 判断得到的矩形的大小是否符合
-                rec.append([x,y,w,h])
+            # if w < h : # 判断得到的矩形的大小是否符合
+            rec.append([x,y,w,h])
 
         mi = -1
         mw = 0
@@ -155,9 +157,9 @@ class VisionSensor():
         if mi > -1:
             x,y,w,h = rec[mi]     
 
-            # mmm = self.image[y:y+h, x:x+w]
-            # cv2.imshow('mmm.png',mmm)
-            # cv2.waitKey()
+            mmm = self.image[y:y+h, x:x+w]
+            cv2.imshow('mmm.png',mmm)
+            cv2.waitKey()
 
             self.targetX = x + w / 2
             self.targetY = y + h / 2
@@ -171,15 +173,24 @@ class VisionSensor():
         mask = cv2.inRange(gray,limit,255) #将limit-255范围内的像素点全部转化为白色（255），0-limit为黑色（0）,达到凸显二维码的目的
 
         kernel = np.ones((5,5),np.uint8)
-        erosion = cv2.erode(mask,kernel)
-        erosion = cv2.erode(erosion,kernel)
+        mask = cv2.dilate(mask,kernel)
 
-        contours,hier=cv2.findContours(erosion, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        mask = cv2.erode(mask,kernel)
+        mask = cv2.erode(mask,kernel)
+        mask = cv2.erode(mask,kernel)
+
+        # cv2.imshow('mask.png',mask)
+        # cv2.waitKey()
+
+
+        contours,hier=cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         rec = []
+        # area = []
         for c in contours:
             x,y,w,h = cv2.boundingRect(c)#计算出一个简单地边界框
-            if (abs(w-h)<10) & (w>10): # 判断得到的矩形的大小是否符合（二维码的某个块即可）
+            if (abs(w-h)<50) & (w>20): # 判断得到的矩形的大小是否符合（二维码的某个块即可）
                 rec.append([x,y,w,h])
+                # area.append(cv2.contourArea(c))
 
         mi = -1
         mw = 0
@@ -194,6 +205,15 @@ class VisionSensor():
             # mmm = self.image[y:y+h, x:x+w]
             # cv2.imshow('mmm.png',mmm)
             # cv2.waitKey()
+
+            # mm = mask[y:y+h, x:x+w]
+            # cv2.imshow('mm.png',mm)
+            # cv2.waitKey()
+
+            # print('area is ' + str(area[mi]))
+
+            # print(self.pos[2] * math.sqrt(area[mi]))
+
             self.targetX = x + w / 2
             self.targetY = y + h / 2
             if w * self.pos[2] > 300:
